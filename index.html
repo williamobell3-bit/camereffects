@@ -1,589 +1,2160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Name Game - Multiplayer</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Camereffects ✦</title>
+<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #08080f;
+  --surface: #12121e;
+  --card: #1a1a2e;
+  --pink: #ff2d87;
+  --cyan: #00e5ff;
+  --gold: #ffd600;
+  --purple: #b14aed;
+  --green: #00e676;
+  --text: #f0f0ff;
+  --muted: #8888aa;
+  --border: rgba(255,255,255,0.08);
+  --glass: rgba(255,255,255,0.04);
+  --radius: 18px;
+  --font-head: 'Boogaloo', cursive;
+  --font-body: 'Nunito', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body)}
+button{cursor:pointer;border:none;background:none;font-family:var(--font-body)}
+input,textarea{font-family:var(--font-body)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── APP SHELL ── */
+#app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+.screen.active{display:flex}
+
+/* ── ANIMATED BG ── */
+.starfield{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) var(--delay,0s) infinite alternate}
+@keyframes twinkle{0%{opacity:.1;transform:scale(1)}100%{opacity:.8;transform:scale(1.5)}}
+
+/* ── LOGO ── */
+.logo{font-family:var(--font-head);font-size:1.8rem;background:linear-gradient(135deg,var(--pink),var(--cyan),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+.logo-sm{font-family:var(--font-head);font-size:1.3rem;background:linear-gradient(135deg,var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ── AUTH SCREEN ── */
+#screen-auth{background:var(--bg);justify-content:center;align-items:center;position:relative;z-index:1}
+.auth-wrap{display:flex;width:min(900px,100%);height:min(620px,100%);border-radius:28px;overflow:hidden;border:1px solid var(--border);box-shadow:0 0 80px rgba(255,45,135,.15)}
+.auth-art{flex:1;background:linear-gradient(145deg,#1a0533,#0d1f4a,#091a2a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px;position:relative;overflow:hidden}
+.auth-art::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 40%,rgba(255,45,135,.25),transparent 60%),radial-gradient(circle at 70% 70%,rgba(0,229,255,.2),transparent 60%)}
+.auth-art-emoji{font-size:5rem;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-15px) rotate(5deg)}}
+.auth-art-title{font-family:var(--font-head);font-size:2.8rem;text-align:center;line-height:1.1;color:#fff;z-index:1}
+.auth-art-title span{background:linear-gradient(135deg,var(--pink),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-art-sub{color:rgba(255,255,255,.6);text-align:center;font-size:.9rem;z-index:1;line-height:1.5}
+.auth-form-wrap{flex:1;background:var(--surface);display:flex;flex-direction:column;padding:40px;overflow-y:auto;justify-content:center}
+.auth-tabs{display:flex;gap:8px;margin-bottom:28px}
+.auth-tab{padding:8px 20px;border-radius:30px;font-weight:700;font-size:.9rem;transition:.2s;color:var(--muted)}
+.auth-tab.active{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff}
+.auth-form{display:flex;flex-direction:column;gap:14px}
+.field-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+.field-input{width:100%;background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:11px 16px;color:var(--text);font-size:.95rem;outline:none;transition:.2s}
+.field-input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,45,135,.15)}
+.btn-primary{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;font-weight:800;font-size:1rem;padding:13px;border-radius:14px;transition:.2s;width:100%}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-ghost{color:var(--muted);font-size:.85rem;text-align:center;padding:8px}
+.btn-ghost span{color:var(--pink);font-weight:700;cursor:pointer}
+
+/* Avatar picker */
+.avatar-pick-label{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.avatar-options{display:flex;gap:8px;flex-wrap:wrap}
+.avatar-opt{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:2px solid transparent;cursor:pointer;transition:.2s;background:var(--glass)}
+.avatar-opt.selected,.avatar-opt:hover{border-color:var(--pink);transform:scale(1.1)}
+
+/* ── NAV BAR ── */
+.nav-bar{display:flex;background:rgba(10,10,20,.9);border-top:1px solid var(--border);backdrop-filter:blur(20px);z-index:100;padding:6px 0 env(safe-area-inset-bottom)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px;border-radius:12px;transition:.2s;cursor:pointer;min-height:50px;color:var(--muted)}
+.nav-item.active{color:var(--pink)}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none}
+.nav-item.create-btn{position:relative}
+.create-circle{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(255,45,135,.5);transition:.2s;margin-top:-18px}
+.create-circle:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(255,45,135,.7)}
+.create-circle svg{stroke:#fff;width:24px;height:24px}
+.nav-label{font-size:.6rem;font-weight:700}
+
+/* ── TOP BAR ── */
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 8px;flex-shrink:0;z-index:10}
+.top-avatar{width:34px;height:34px;border-radius:50%;border:2px solid var(--pink);display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:var(--card);cursor:pointer}
+
+/* ── FEED TABS ── */
+.feed-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;z-index:10;background:var(--bg)}
+.feed-tab{flex:1;padding:12px;text-align:center;font-weight:700;font-size:.85rem;color:var(--muted);cursor:pointer;transition:.2s;position:relative}
+.feed-tab.active{color:var(--text)}
+.feed-tab.active::after{content:'';position:absolute;bottom:-1px;left:20%;width:60%;height:2px;background:linear-gradient(90deg,var(--pink),var(--cyan));border-radius:2px}
+
+/* ── FEED ── */
+.feed-scroll{flex:1;overflow-y:auto;padding:12px}
+.post-card{background:var(--card);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;border:1px solid var(--border);transition:.2s}
+.post-card:hover{border-color:rgba(255,45,135,.3)}
+.post-header{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.post-avatar{width:38px;height:38px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid var(--border);flex-shrink:0}
+.post-user{font-weight:700;font-size:.9rem;cursor:pointer}
+.post-user:hover{color:var(--pink)}
+.post-time{color:var(--muted);font-size:.75rem}
+.post-badge{margin-left:auto;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.badge-video{background:rgba(255,45,135,.15);color:var(--pink)}
+.badge-photo{background:rgba(0,229,255,.15);color:var(--cyan)}
+.badge-game{background:rgba(177,74,237,.15);color:var(--purple)}
+.post-media{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#1a0a2e,#0a1a2e);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer}
+.post-media-emoji{font-size:4rem;position:absolute;user-select:none}
+.post-media-text{position:absolute;font-family:var(--font-head);font-size:1.8rem;color:#fff;text-shadow:2px 2px 10px rgba(0,0,0,.8);pointer-events:none}
+.emome-overlay{position:absolute;font-size:2.5rem;animation:emome-bounce .8s ease-in-out infinite alternate}
+@keyframes emome-bounce{0%{transform:scale(1) rotate(-5deg)}100%{transform:scale(1.15) rotate(5deg)}}
+.play-btn{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;position:absolute;transition:.2s}
+.play-btn:hover{transform:scale(1.1)}
+.play-btn svg{width:24px;height:24px;fill:#111;margin-left:3px}
+.post-actions{display:flex;align-items:center;gap:4px;padding:10px 14px}
+.action-btn{display:flex;align-items:center;gap:5px;padding:7px 10px;border-radius:10px;font-size:.82rem;font-weight:700;color:var(--muted);transition:.2s;cursor:pointer}
+.action-btn:hover,.action-btn.active{color:var(--text);background:var(--glass)}
+.action-btn.active.like{color:var(--green)}
+.action-btn.active.dislike{color:var(--pink)}
+.action-btn.active.save{color:var(--gold)}
+.action-btn.active.mytype{color:var(--cyan)}
+.action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none}
+.action-btn.active.like svg{fill:var(--green);stroke:var(--green)}
+.action-btn.active.save svg{fill:var(--gold);stroke:var(--gold)}
+.post-comments-preview{padding:4px 14px 12px;color:var(--muted);font-size:.82rem;cursor:pointer}
+.post-comments-preview span{color:var(--text);font-weight:700}
+
+/* ── CREATE SCREEN ── */
+#screen-create{background:#000;position:relative}
+.camera-view{flex:1;position:relative;overflow:hidden;background:#0a0a0a;display:flex;align-items:center;justify-content:center}
+#video-el{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.camera-overlay{position:absolute;inset:0;pointer-events:none}
+.sticker-layer{position:absolute;inset:0;pointer-events:none}
+.sticker{position:absolute;user-select:none;cursor:move;pointer-events:all;font-size:2.5rem;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
+.sticker.emome{animation:emome-bounce .7s ease-in-out infinite alternate}
+.text-sticker{position:absolute;cursor:move;pointer-events:all;font-family:var(--font-head);font-size:1.6rem;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,.8);white-space:nowrap;user-select:none}
+.camera-top{position:absolute;top:0;left:0;right:0;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent);z-index:10}
+.cam-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;transition:.2s}
+.cam-btn:hover{background:rgba(255,255,255,.25)}
+.cam-btn svg{width:20px;height:20px;stroke:#fff;fill:none}
+.camera-bottom{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,.9),transparent);z-index:10;padding:0 0 16px}
+.capture-row{display:flex;align-items:center;justify-content:center;gap:28px;padding:16px 20px 8px}
+.capture-btn{width:70px;height:70px;border-radius:50%;border:4px solid #fff;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);transition:.2s;position:relative}
+.capture-btn:hover{transform:scale(1.05)}
+.capture-btn.recording{border-color:var(--pink);animation:pulse-border 1s infinite}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 0 0 rgba(255,45,135,.5)}50%{box-shadow:0 0 0 10px rgba(255,45,135,0)}}
+.capture-inner{width:50px;height:50px;border-radius:50%;background:#fff}
+.capture-btn.recording .capture-inner{border-radius:8px;background:var(--pink);width:28px;height:28px}
+.cam-side-btn{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;transition:.2s}
+.cam-side-btn svg{width:20px;height:20px;stroke:#fff;fill:none}
+
+/* Effects panel */
+.effects-panel{background:rgba(8,8,15,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:0}
+.effects-tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);padding:0 10px;gap:2px;scrollbar-width:none}
+.effects-tabs::-webkit-scrollbar{display:none}
+.eff-tab{flex-shrink:0;padding:10px 14px;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.15s}
+.eff-tab.active{color:var(--pink);border-bottom-color:var(--pink)}
+.effects-content{padding:10px;display:flex;gap:8px;overflow-x:auto;min-height:70px;align-items:center;scrollbar-width:none}
+.effects-content::-webkit-scrollbar{display:none}
+.eff-item{flex-shrink:0;width:54px;height:54px;border-radius:14px;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;font-size:1.6rem;position:relative}
+.eff-item:hover{border-color:var(--pink);transform:scale(1.08)}
+.eff-item.selected{border-color:var(--cyan);background:rgba(0,229,255,.1)}
+.eff-item .eff-label{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:.6rem;white-space:nowrap;color:var(--muted);font-weight:600}
+.bg-eff{width:70px;height:44px;border-radius:10px;flex-shrink:0;border:2px solid var(--border);cursor:pointer;transition:.2s;overflow:hidden}
+.bg-eff:hover,.bg-eff.selected{border-color:var(--cyan)}
+.no-cam-msg{color:var(--muted);font-family:var(--font-head);font-size:1.2rem;text-align:center;padding:20px}
+
+/* ── PROFILE SCREEN ── */
+#screen-profile{overflow:hidden}
+.profile-scroll{flex:1;overflow-y:auto}
+.profile-header{background:linear-gradient(145deg,#1a0533 0%,#0d1f4a 50%,var(--bg) 100%);padding:24px 18px 0;position:relative}
+.profile-header::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 50%,rgba(255,45,135,.2),transparent 60%)}
+.profile-big-avatar{width:86px;height:86px;border-radius:50%;border:3px solid var(--pink);display:flex;align-items:center;justify-content:center;font-size:3.2rem;background:var(--card);margin-bottom:12px;position:relative;z-index:1;box-shadow:0 0 30px rgba(255,45,135,.3);overflow:hidden;flex-shrink:0}
+.profile-username{font-family:var(--font-head);font-size:1.8rem;z-index:1;position:relative}
+.profile-handle{color:var(--muted);font-size:.85rem;z-index:1;position:relative}
+.profile-stats{display:flex;gap:24px;margin:14px 0;z-index:1;position:relative}
+.p-stat{text-align:center}
+.p-stat-num{font-weight:900;font-size:1.2rem}
+.p-stat-label{font-size:.72rem;color:var(--muted);font-weight:600}
+.profile-actions{display:flex;gap:8px;margin-bottom:16px;z-index:1;position:relative}
+.btn-outline{padding:9px 20px;border-radius:12px;border:1.5px solid var(--border);font-weight:700;font-size:.85rem;color:var(--text);transition:.2s}
+.btn-outline:hover{border-color:var(--pink);color:var(--pink)}
+.btn-sm-pink{padding:9px 20px;border-radius:12px;background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;font-weight:700;font-size:.85rem;transition:.2s}
+.btn-sm-pink:hover{opacity:.9}
+.btn-danger{padding:9px 20px;border-radius:12px;border:1.5px solid var(--pink);color:var(--pink);font-weight:700;font-size:.85rem;transition:.2s}
+.profile-grid-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg)}
+.grid-tab{flex:1;padding:12px;text-align:center;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s;position:relative}
+.grid-tab.active{color:var(--text)}
+.grid-tab.active::after{content:'';position:absolute;bottom:-1px;left:15%;width:70%;height:2px;background:linear-gradient(90deg,var(--pink),var(--cyan));border-radius:2px}
+.creations-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px}
+.grid-item{aspect-ratio:.75;background:var(--card);position:relative;overflow:hidden;cursor:pointer;transition:.2s}
+.grid-item:hover .grid-overlay{opacity:1}
+.grid-thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem}
+.grid-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;flex-direction:column;gap:4px;color:#fff;font-weight:700;font-size:.8rem}
+.grid-overlay svg{width:20px;height:20px;stroke:#fff;fill:none}
+
+/* ── SEARCH SCREEN ── */
+#screen-search{overflow:hidden}
+.search-scroll{flex:1;overflow-y:auto;padding:12px}
+.search-bar-wrap{padding:12px 18px;flex-shrink:0}
+.search-bar{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:10px 14px;transition:.2s}
+.search-bar:focus-within{border-color:var(--pink)}
+.search-bar svg{width:18px;height:18px;stroke:var(--muted);flex-shrink:0}
+.search-bar input{flex:1;background:none;border:none;color:var(--text);font-size:.95rem;outline:none}
+.search-bar input::placeholder{color:var(--muted)}
+.section-title{font-family:var(--font-head);font-size:1.2rem;margin-bottom:12px;color:var(--text)}
+.user-card{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border-radius:14px;margin-bottom:8px;border:1px solid var(--border);transition:.2s;cursor:pointer}
+.user-card:hover{border-color:rgba(255,45,135,.3)}
+.user-card-avatar{width:46px;height:46px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.6rem;border:2px solid var(--border);flex-shrink:0}
+.user-card-name{font-weight:700;font-size:.95rem}
+.user-card-handle{color:var(--muted);font-size:.78rem}
+.user-card-actions{margin-left:auto;display:flex;gap:6px}
+.btn-tiny{padding:5px 12px;border-radius:8px;font-size:.75rem;font-weight:700;transition:.2s}
+.btn-tiny.pink{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff}
+.btn-tiny.outline{border:1.5px solid var(--border);color:var(--muted)}
+.btn-tiny.outline:hover{border-color:var(--pink);color:var(--pink)}
+.btn-tiny.red{border:1.5px solid var(--pink);color:var(--pink)}
+
+/* ── NOTIFICATIONS ── */
+#screen-notifs{overflow:hidden}
+.notifs-scroll{flex:1;overflow-y:auto;padding:12px}
+.notif-card{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--card);border-radius:14px;margin-bottom:8px;border:1px solid var(--border);transition:.2s}
+.notif-card.alert{border-color:rgba(255,45,135,.5);background:rgba(255,45,135,.08)}
+.notif-card.new{border-color:rgba(0,229,255,.3)}
+.notif-icon{font-size:1.6rem;flex-shrink:0;width:44px;height:44px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center}
+.notif-text{flex:1;font-size:.88rem;line-height:1.5}
+.notif-text strong{color:var(--pink)}
+.notif-time{color:var(--muted);font-size:.75rem;margin-top:3px}
+.privacy-alert-banner{background:linear-gradient(135deg,rgba(255,45,135,.2),rgba(177,74,237,.2));border:1px solid var(--pink);border-radius:14px;padding:16px;margin-bottom:14px}
+.privacy-alert-banner h3{color:var(--pink);font-family:var(--font-head);font-size:1.1rem;margin-bottom:6px}
+.privacy-alert-banner p{font-size:.85rem;color:var(--text);line-height:1.5}
+.privacy-actions{display:flex;gap:8px;margin-top:10px}
+
+/* ── MODAL / OVERLAY ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:var(--surface);border-radius:28px 28px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:20px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px}
+.modal-title{font-family:var(--font-head);font-size:1.4rem;margin-bottom:16px}
+.comments-list{max-height:50vh;overflow-y:auto}
+.comment-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.comment-avatar{width:32px;height:32px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.comment-body{flex:1}
+.comment-author{font-weight:700;font-size:.85rem}
+.comment-text{font-size:.87rem;line-height:1.4;margin-top:2px}
+.comment-input-row{display:flex;gap:10px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.comment-input{flex:1;background:var(--glass);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:.9rem;outline:none;resize:none}
+.comment-input:focus{border-color:var(--pink)}
+.btn-send{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;font-weight:700;padding:10px 16px;border-radius:10px;font-size:.85rem;transition:.2s}
+
+/* Confirm dialog */
+.confirm-dialog{background:var(--card);border-radius:20px;padding:24px;margin:auto;max-width:340px;border:1px solid var(--border);animation:slideUp .3s ease;text-align:center}
+.confirm-dialog h3{font-family:var(--font-head);font-size:1.3rem;margin-bottom:10px}
+.confirm-dialog p{color:var(--muted);font-size:.88rem;line-height:1.5;margin-bottom:18px}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btns button{flex:1;padding:11px;border-radius:12px;font-weight:700;font-size:.9rem;transition:.2s}
+.confirm-cancel{background:var(--glass);border:1px solid var(--border);color:var(--text)}
+.confirm-proceed{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff}
+
+/* ── TEXT ADD MODAL ── */
+.text-add-modal{background:var(--card);border-radius:20px;padding:22px;max-width:360px;width:100%;margin:auto;animation:slideUp .3s ease}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 20px;font-size:.88rem;font-weight:600;z-index:9999;animation:toastIn .3s ease;white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--pink);color:var(--pink)}
+.toast.info{border-color:var(--cyan);color:var(--cyan)}
+@keyframes toastIn{from{opacity:0;top:10px}to{opacity:1;top:20px}}
+
+/* ── EMOME CSS ANIMATIONS ── */
+.em-tongue{display:inline-block;animation:tongue-wag .6s ease-in-out infinite alternate}
+@keyframes tongue-wag{0%{transform:scaleY(1)}100%{transform:scaleY(1.3) translateY(3px)}}
+.em-hearts{animation:heartbeat .5s ease-in-out infinite alternate}
+@keyframes heartbeat{0%{transform:scale(1)}100%{transform:scale(1.25)}}
+.em-laugh{animation:laugh-shake .3s ease-in-out infinite}
+@keyframes laugh-shake{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.em-cry{animation:cry-shake .5s ease-in-out infinite}
+@keyframes cry-shake{0%{transform:translateY(0)}50%{transform:translateY(2px)}}
+.em-angry{animation:angry-throb .4s ease-in-out infinite alternate}
+@keyframes angry-throb{0%{transform:scale(1)}100%{transform:scale(1.12) rotate(-3deg)}}
+.em-spin{animation:spin-slow 2s linear infinite}
+@keyframes spin-slow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.em-bounce{animation:em-boing .5s cubic-bezier(.36,.07,.19,.97) infinite}
+@keyframes em-boing{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* Responsive tweaks */
+@media(max-width:480px){
+  .auth-wrap{flex-direction:column;height:100%;border-radius:0}
+  .auth-art{flex:0 0 160px;padding:20px}
+  .auth-art-emoji{font-size:3rem}
+  .auth-art-title{font-size:2rem}
+  .auth-form-wrap{flex:1;padding:24px 20px}
+}
+
+/* ── MINI GAME inside feed ── */
+.minigame-card{background:linear-gradient(135deg,#1a0a3e,#0a1a3e);border-radius:var(--radius);border:1px solid rgba(177,74,237,.4);padding:18px;margin-bottom:16px;cursor:pointer;transition:.2s;text-align:center}
+.minigame-card:hover{border-color:var(--purple);transform:translateY(-2px)}
+.minigame-card h3{font-family:var(--font-head);font-size:1.3rem;margin-bottom:6px}
+.minigame-card p{color:var(--muted);font-size:.82rem;margin-bottom:14px}
+.minigame-preview{font-size:3rem;margin-bottom:10px;display:flex;justify-content:center;gap:12px}
+
+/* ── IN-APP MINI GAME (Emoji Catcher) ── */
+.game-modal-inner{background:var(--card);border-radius:20px;padding:0;overflow:hidden;max-width:380px;width:100%;margin:auto;animation:slideUp .3s ease}
+#game-canvas{width:100%;display:block;background:linear-gradient(180deg,#0a0a1a 0%,#1a0a2e 100%)}
+.game-ui{padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.game-score{font-family:var(--font-head);font-size:1.4rem}
+.game-lives{font-size:1.2rem}
+.game-over{display:none;position:absolute;inset:0;background:rgba(0,0,0,.85);align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:20px;border-radius:20px}
+.game-over.show{display:flex}
+
+/* scrollbar */
+.search-scroll::-webkit-scrollbar,.feed-scroll::-webkit-scrollbar,.profile-scroll::-webkit-scrollbar,.notifs-scroll::-webkit-scrollbar{width:4px}
+</style>
 </head>
 <body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        
-        // API base URL - defaults to same server
-        const API_BASE = window.location.origin;
-        
-        // Lucide React icons as inline SVG components
-        const Users = ({ className }) => (
-            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-        );
-        
-        const Copy = ({ className }) => (
-            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-        );
-        
-        const Check = ({ className }) => (
-            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-        );
-        
-        const Crown = ({ className }) => (
-            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-            </svg>
-        );
-        
-        const AlertCircle = ({ className }) => (
-            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        );
+<!-- Starfield -->
+<div class="starfield" id="starfield"></div>
 
-        function UsernameMatchGame() {
-          const [state, setState] = useState('home');
-          const [joinStep, setJoinStep] = useState(1);
-          const [hostStep, setHostStep] = useState(1);
-          const [gameCode, setGameCode] = useState('');
-          const [playerName, setPlayerName] = useState('');
-          const [username, setUsername] = useState('');
-          const [gameMode, setGameMode] = useState('classic');
-          const [theme, setTheme] = useState('');
-          const [gameData, setGameData] = useState(null);
-          const [myId, setMyId] = useState(null);
-          const [message, setMessage] = useState('');
-          const [selected, setSelected] = useState('');
-          const [guess, setGuess] = useState('');
-          const [copied, setCopied] = useState(false);
+<div id="app">
 
-          // Poll for game updates
-          useEffect(() => {
-            if (!gameCode) return;
-            
-            const pollGame = async () => {
-              try {
-                const response = await fetch(`${API_BASE}/api/game/${gameCode}`);
-                if (response.ok) {
-                  const data = await response.json();
-                  setGameData(data);
-                }
-              } catch (error) {
-                console.error('Error polling game:', error);
-              }
-            };
-            
-            // Poll every second
-            const interval = setInterval(pollGame, 1000);
-            pollGame(); // Initial poll
-            
-            return () => clearInterval(interval);
-          }, [gameCode]);
+  <!-- ══════════════ AUTH SCREEN ══════════════ -->
+  <div class="screen active" id="screen-auth">
+    <div class="auth-wrap">
+      <div class="auth-art">
+        <div class="auth-art-emoji">🎭</div>
+        <div class="auth-art-title">Welcome to<br/><span>Camereffects</span></div>
+        <div class="auth-art-sub">Create, share, and discover<br/>amazing camera creations ✨</div>
+      </div>
+      <div class="auth-form-wrap">
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login')">Log In</button>
+          <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+        </div>
 
-          const createGame = async () => {
-            const trimmedName = playerName.trim();
-            const trimmedUsername = username.trim();
-            
-            if (!trimmedName || !trimmedUsername) {
-              setMessage('Enter name and username');
-              return;
-            }
-            
-            if (trimmedName.length < 2 || trimmedUsername.length < 2) {
-              setMessage('Name and username must be at least 2 characters');
-              return;
-            }
-            
-            const code = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const id = Date.now().toString() + '_' + Math.random().toString(36).substring(2, 5);
-            const data = {
-              code: code,
-              mode: gameMode,
-              theme: theme,
-              state: 'lobby',
-              players: [{
-                id: id,
-                name: trimmedName,
-                username: trimmedUsername,
-                isHost: true,
-                active: true,
-                score: 0
-              }],
-              current: null,
-              winner: null
-            };
-            
-            try {
-              const response = await fetch(`${API_BASE}/api/game`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-              });
-              
-              if (response.ok) {
-                setGameCode(code);
-                setMyId(id);
-                setGameData(data);
-                setState('lobby');
-                setHostStep(1);
-                setMessage('');
-              } else {
-                setMessage('Failed to create game');
-              }
-            } catch (error) {
-              setMessage('Connection error. Is the server running?');
-            }
-          };
+        <!-- Login form -->
+        <div id="login-form" class="auth-form">
+          <div>
+            <div class="field-label">Username</div>
+            <input class="field-input" id="login-user" placeholder="your_username" type="text"/>
+          </div>
+          <div>
+            <div class="field-label">Password</div>
+            <input class="field-input" id="login-pass" placeholder="••••••••" type="password"/>
+          </div>
+          <button class="btn-primary" onclick="doLogin()">Log In 🚀</button>
+          <div class="btn-ghost">Don't have an account? <span onclick="switchAuthTab('signup')">Sign up</span></div>
+        </div>
 
-          const verifyGameCode = async () => {
-            const trimmedCode = gameCode.trim().toUpperCase();
-            
-            if (!trimmedCode) {
-              setMessage('Enter code');
-              return;
-            }
-            
-            try {
-              const response = await fetch(`${API_BASE}/api/game/${trimmedCode}`);
-              
-              if (response.ok) {
-                const data = await response.json();
-                
-                if (data.state !== 'lobby') {
-                  setMessage('Game already started');
-                  return;
-                }
-                
-                setGameCode(trimmedCode);
-                setMessage('');
-                setJoinStep(2);
-              } else {
-                setMessage('Game not found');
-              }
-            } catch (error) {
-              setMessage('Connection error. Is the server running?');
-            }
-          };
-
-          const joinGame = async () => {
-            const trimmedCode = gameCode.trim().toUpperCase();
-            const trimmedName = playerName.trim();
-            const trimmedUsername = username.trim();
-            
-            if (!trimmedName || !trimmedUsername) {
-              setMessage('Enter name and username');
-              return;
-            }
-            
-            if (trimmedName.length < 2 || trimmedUsername.length < 2) {
-              setMessage('Name and username must be at least 2 characters');
-              return;
-            }
-            
-            try {
-              const response = await fetch(`${API_BASE}/api/game/${trimmedCode}`);
-              
-              if (!response.ok) {
-                setMessage('Game not found');
-                return;
-              }
-              
-              const data = await response.json();
-              
-              const nameLower = trimmedName.toLowerCase();
-              const usernameLower = trimmedUsername.toLowerCase();
-              const duplicateName = data.players.some(p => p.name.toLowerCase() === nameLower);
-              const duplicateUsername = data.players.some(p => p.username.toLowerCase() === usernameLower);
-              
-              if (duplicateName) {
-                setMessage('This name is already taken. Choose a different name.');
-                return;
-              }
-              
-              if (duplicateUsername) {
-                setMessage('This username is already taken. Choose a different username.');
-                return;
-              }
-              
-              const id = Date.now().toString() + '_' + Math.random().toString(36).substring(2, 5);
-              data.players.push({
-                id: id,
-                name: trimmedName,
-                username: trimmedUsername,
-                isHost: false,
-                active: true,
-                score: 0
-              });
-              
-              const updateResponse = await fetch(`${API_BASE}/api/game`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-              });
-              
-              if (updateResponse.ok) {
-                setMyId(id);
-                setGameData(data);
-                setState('lobby');
-                setJoinStep(1);
-                setMessage('');
-              } else {
-                setMessage('Failed to join game');
-              }
-            } catch (error) {
-              setMessage('Connection error. Is the server running?');
-            }
-          };
-
-          const updateGame = async (updates) => {
-            const newData = { ...gameData, ...updates };
-            
-            try {
-              await fetch(`${API_BASE}/api/game`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newData)
-              });
-              
-              setGameData(newData);
-            } catch (error) {
-              console.error('Error updating game:', error);
-            }
-          };
-
-          const startGame = () => {
-            if (gameData.players.length < 2) {
-              setMessage('Need at least 2 players to start');
-              return;
-            }
-            
-            const active = gameData.players.filter(p => p.active);
-            const randomIndex = Math.floor(Math.random() * active.length);
-            updateGame({ state: 'playing', current: active[randomIndex].id });
-          };
-
-          const makeGuess = () => {
-            const trimmedGuess = guess.trim();
-            
-            if (!selected || !trimmedGuess) {
-              setMessage('Select a player and enter a guess');
-              return;
-            }
-            
-            const target = gameData.players.find(p => p.id === selected);
-            const correct = trimmedGuess.toLowerCase() === target.name.toLowerCase();
-            
-            if (correct) {
-              const players = gameData.players.map(p => {
-                if (p.id === selected) return { ...p, active: false };
-                if (p.id === gameData.current) return { ...p, score: p.score + 1 };
-                return p;
-              });
-              const remaining = players.filter(p => p.active);
-              
-              if (remaining.length === 1) {
-                updateGame({ players: players, state: 'finished', winner: remaining[0] });
-              } else {
-                updateGame({ players: players });
-              }
-            } else {
-              updateGame({ current: selected });
-            }
-            
-            setSelected('');
-            setGuess('');
-            setMessage('');
-          };
-
-          const copyCode = () => {
-            navigator.clipboard.writeText(gameCode);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          };
-
-          const leaveGame = () => {
-            setState('home');
-            setGameData(null);
-            setGameCode('');
-            setMyId(null);
-            setMessage('');
-            setJoinStep(1);
-            setHostStep(1);
-          };
-
-          const isMyTurn = gameData && gameData.current === myId;
-          const active = gameData ? gameData.players.filter(p => p.active) : [];
-          const amIActive = gameData && gameData.players.find(p => p.id === myId)?.active;
-
-          return (
-            <div className="min-h-screen bg-gradient-to-br from-green-500 via-blue-500 to-purple-600 p-6">
-              <style>{`
-                @keyframes fadeIn {
-                  from {
-                    opacity: 0;
-                    transform: translateY(10px);
-                  }
-                  to {
-                    opacity: 1;
-                    transform: translateY(0);
-                  }
-                }
-                .fade-in {
-                  animation: fadeIn 0.5s ease-out forwards;
-                }
-                .fade-in-delay-1 {
-                  animation: fadeIn 0.5s ease-out 0.1s forwards;
-                  opacity: 0;
-                }
-                .fade-in-delay-2 {
-                  animation: fadeIn 0.5s ease-out 0.2s forwards;
-                  opacity: 0;
-                }
-                .fade-in-delay-3 {
-                  animation: fadeIn 0.5s ease-out 0.3s forwards;
-                  opacity: 0;
-                }
-              `}</style>
-              <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-8 fade-in">
-                <div className="text-center mb-8 fade-in-delay-1">
-                  <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">The Name Game</h1>
-                  <p className="text-gray-600 mt-2">Guess the real names behind the usernames!</p>
-                </div>
-
-                {state === 'home' && (
-                  <div className="grid md:grid-cols-2 gap-6 fade-in-delay-2">
-                    <button onClick={() => setState('host')} className="p-8 bg-gradient-to-br from-green-500 to-green-700 text-white rounded-2xl hover:opacity-90 transition transform hover:scale-105 shadow-xl">
-                      <Users className="w-16 h-16 mx-auto mb-4" />
-                      <h2 className="text-3xl font-bold">Host Game</h2>
-                    </button>
-                    <button onClick={() => setState('join')} className="p-8 bg-gradient-to-br from-purple-500 to-purple-700 text-white rounded-2xl hover:opacity-90 transition transform hover:scale-105 shadow-xl">
-                      <Copy className="w-16 h-16 mx-auto mb-4" />
-                      <h2 className="text-3xl font-bold">Join Game</h2>
-                    </button>
-                  </div>
-                )}
-
-                {state === 'host' && hostStep === 1 && (
-                  <div className="space-y-4 fade-in-delay-2">
-                    <button onClick={() => setState('home')} className="text-blue-600 hover:underline">← Back</button>
-                    <div className="text-center mb-4">
-                      <h2 className="text-2xl font-bold text-gray-800">Host a Game</h2>
-                      <p className="text-gray-600 mt-1">Step 1: Choose game settings</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Game Mode</label>
-                      <select value={gameMode} onChange={(e) => setGameMode(e.target.value)} className="w-full p-3 border-2 rounded-lg">
-                        <option value="classic">Classic</option>
-                        <option value="speed">Speed Round</option>
-                        <option value="team">Team Mode</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Theme (Optional)</label>
-                      <input 
-                        placeholder="e.g., Movies, Animals, Food..." 
-                        value={theme} 
-                        onChange={(e) => setTheme(e.target.value)} 
-                        onKeyPress={(e) => e.key === 'Enter' && setHostStep(2)}
-                        className="w-full p-3 border-2 rounded-lg" 
-                      />
-                    </div>
-                    <button onClick={() => setHostStep(2)} className="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white p-4 rounded-lg font-bold">Next</button>
-                  </div>
-                )}
-
-                {state === 'host' && hostStep === 2 && (
-                  <div className="space-y-4 fade-in-delay-2">
-                    <button onClick={() => { setHostStep(1); setMessage(''); }} className="text-blue-600 hover:underline">← Back</button>
-                    <div className="text-center mb-4">
-                      <h2 className="text-2xl font-bold text-gray-800">Host a Game</h2>
-                      <p className="text-gray-600 mt-1">Step 2: Enter your names</p>
-                      <div className="mt-2 text-sm text-gray-600">
-                        <p><span className="font-semibold text-blue-700">Mode:</span> {gameMode.charAt(0).toUpperCase() + gameMode.slice(1)}</p>
-                        {theme && <p><span className="font-semibold text-blue-700">Theme:</span> {theme}</p>}
-                      </div>
-                    </div>
-                    <input placeholder="Your real name" value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full p-3 border-2 rounded-lg" />
-                    <input 
-                      placeholder="Your username" 
-                      value={username} 
-                      onChange={(e) => setUsername(e.target.value)} 
-                      onKeyPress={(e) => e.key === 'Enter' && createGame()}
-                      className="w-full p-3 border-2 rounded-lg" 
-                    />
-                    <button onClick={createGame} className="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white p-4 rounded-lg font-bold">Create Game</button>
-                    {message && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2 fade-in"><AlertCircle className="w-5 h-5" />{message}</div>}
-                  </div>
-                )}
-
-                {state === 'join' && joinStep === 1 && (
-                  <div className="space-y-4 fade-in-delay-2">
-                    <button onClick={() => setState('home')} className="text-blue-600 hover:underline">← Back</button>
-                    <div className="text-center mb-4">
-                      <h2 className="text-2xl font-bold text-gray-800">Join a Game</h2>
-                      <p className="text-gray-600 mt-1">Step 1: Enter the game code</p>
-                    </div>
-                    <input 
-                      placeholder="Game Code" 
-                      value={gameCode} 
-                      onChange={(e) => setGameCode(e.target.value.toUpperCase())} 
-                      onKeyPress={(e) => e.key === 'Enter' && verifyGameCode()}
-                      className="w-full p-3 border-2 rounded-lg text-center text-2xl font-bold" 
-                      maxLength={4} 
-                    />
-                    <button onClick={verifyGameCode} className="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white p-4 rounded-lg font-bold">Next</button>
-                    {message && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2 fade-in"><AlertCircle className="w-5 h-5" />{message}</div>}
-                  </div>
-                )}
-
-                {state === 'join' && joinStep === 2 && (
-                  <div className="space-y-4 fade-in-delay-2">
-                    <button onClick={() => { setJoinStep(1); setMessage(''); }} className="text-blue-600 hover:underline">← Back</button>
-                    <div className="text-center mb-4">
-                      <h2 className="text-2xl font-bold text-gray-800">Join a Game</h2>
-                      <p className="text-gray-600 mt-1">Step 2: Enter your names</p>
-                      <p className="text-sm text-purple-700 font-semibold mt-2">Game Code: {gameCode}</p>
-                    </div>
-                    <input placeholder="Your real name" value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full p-3 border-2 rounded-lg" />
-                    <input 
-                      placeholder="Your username" 
-                      value={username} 
-                      onChange={(e) => setUsername(e.target.value)} 
-                      onKeyPress={(e) => e.key === 'Enter' && joinGame()}
-                      className="w-full p-3 border-2 rounded-lg" 
-                    />
-                    <button onClick={joinGame} className="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white p-4 rounded-lg font-bold">Join Game</button>
-                    {message && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2 fade-in"><AlertCircle className="w-5 h-5" />{message}</div>}
-                  </div>
-                )}
-
-                {state === 'lobby' && gameData && (
-                  <div className="space-y-6 fade-in-delay-2">
-                    <div className="bg-gradient-to-r from-green-100 to-purple-100 p-6 rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="text-sm text-gray-600">Game Code</p>
-                          <p className="text-3xl font-bold text-blue-700">{gameCode}</p>
-                        </div>
-                        <button onClick={copyCode} className="px-4 py-2 bg-white rounded-lg hover:bg-gray-100">
-                          {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="font-bold mb-2">Players ({gameData.players.length})</h3>
-                      {gameData.players.map((p, index) => (
-                        <div key={p.id} className={`bg-gray-100 p-3 rounded mb-2 fade-in-delay-${Math.min(index + 1, 3)}`}>
-                          <p className="font-semibold">{p.name} {p.id === myId && '(You)'}</p>
-                          {p.isHost && <p className="text-sm text-gray-600">👑 Host</p>}
-                        </div>
-                      ))}
-                    </div>
-                    {message && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2 fade-in"><AlertCircle className="w-5 h-5" />{message}</div>}
-                    {gameData.players[0].id === myId && (
-                      <button onClick={startGame} className="w-full bg-gradient-to-r from-green-500 to-green-700 text-white p-4 rounded-lg font-bold">Start Game</button>
-                    )}
-                    <button onClick={leaveGame} className="w-full bg-gray-300 text-gray-700 p-3 rounded-lg font-bold hover:bg-gray-400">Leave Game</button>
-                  </div>
-                )}
-
-                {gameData && gameData.state === 'playing' && (
-                  <div className="space-y-6 fade-in-delay-2">
-                    <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-4 rounded-lg">
-                      <p className="text-sm">Current Turn</p>
-                      <p className="text-2xl font-bold">
-                        {gameData.players.find(p => p.id === gameData.current)?.username || 'Unknown'}
-                        {isMyTurn && ' (You!)'}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-bold mb-2">Active Players ({active.length})</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {active.map((p, index) => (
-                          <div key={p.id} className={
-                            p.id === gameData.current 
-                              ? `p-3 rounded bg-purple-100 border-2 border-purple-500 fade-in-delay-${Math.min(index % 3 + 1, 3)}`
-                              : `p-3 rounded bg-gray-100 fade-in-delay-${Math.min(index % 3 + 1, 3)}`
-                          }>
-                            <p className="font-semibold">{p.username}</p>
-                            <p className="text-xs text-gray-600">Score: {p.score}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {!amIActive && (
-                      <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded fade-in">
-                        <p className="font-semibold">You've been eliminated!</p>
-                        <p className="text-sm">Watch the remaining players battle it out.</p>
-                      </div>
-                    )}
-
-                    {isMyTurn && amIActive && (
-                      <div className="space-y-3 bg-green-50 p-4 rounded-lg border-2 border-green-500 fade-in">
-                        <p className="font-bold text-green-700">Your turn! Make a guess:</p>
-                        <select value={selected} onChange={(e) => setSelected(e.target.value)} className="w-full p-3 border-2 rounded-lg">
-                          <option value="">Select a player...</option>
-                          {active.filter(p => p.id !== myId).map(p => (
-                            <option key={p.id} value={p.id}>{p.username}</option>
-                          ))}
-                        </select>
-                        <input 
-                          placeholder="Guess their real name" 
-                          value={guess} 
-                          onChange={(e) => setGuess(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && makeGuess()}
-                          className="w-full p-3 border-2 rounded-lg" 
-                        />
-                        <button onClick={makeGuess} className="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white p-3 rounded-lg font-bold">Submit Guess</button>
-                        {message && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2 fade-in"><AlertCircle className="w-5 h-5" />{message}</div>}
-                      </div>
-                    )}
-
-                    <button onClick={leaveGame} className="w-full bg-gray-300 text-gray-700 p-3 rounded-lg font-bold hover:bg-gray-400">Leave Game</button>
-                  </div>
-                )}
-
-                {gameData && gameData.state === 'finished' && gameData.winner && (
-                  <div className="text-center space-y-6 fade-in-delay-2">
-                    <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-8 rounded-lg">
-                      <Crown className="w-20 h-20 mx-auto text-yellow-500 mb-4" />
-                      <h2 className="text-3xl font-bold">Winner!</h2>
-                      <p className="text-2xl text-purple-700">{gameData.winner.username}</p>
-                      <p className="text-gray-600">({gameData.winner.name})</p>
-                    </div>
-                    <div>
-                      <h3 className="font-bold mb-3">Final Scores</h3>
-                      {gameData.players
-                        .sort((a, b) => b.score - a.score)
-                        .map((p, index) => (
-                        <div key={p.id} className={`p-3 rounded mb-2 fade-in-delay-${Math.min(index % 3 + 1, 3)} ${index === 0 ? 'bg-yellow-100 border-2 border-yellow-400' : 'bg-gray-100'}`}>
-                          <p className="font-semibold">
-                            {index + 1}. {p.username} = {p.name}
-                            {p.id === myId && ' (You)'}
-                          </p>
-                          <p className="text-sm">Score: {p.score} correct guess{p.score !== 1 ? 'es' : ''}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={leaveGame} className="bg-gradient-to-r from-purple-500 to-purple-700 text-white px-8 py-3 rounded-lg font-bold">Back to Home</button>
-                  </div>
-                )}
-              </div>
+        <!-- Signup form -->
+        <div id="signup-form" class="auth-form" style="display:none">
+          <div>
+            <div class="field-label">Display Name</div>
+            <input class="field-input" id="su-name" placeholder="Cool Name" type="text"/>
+          </div>
+          <div>
+            <div class="field-label">Username</div>
+            <input class="field-input" id="su-user" placeholder="@username" type="text"/>
+          </div>
+          <div>
+            <div class="field-label">Password</div>
+            <input class="field-input" id="su-pass" placeholder="••••••••" type="password"/>
+          </div>
+          <div>
+            <div class="avatar-pick-label">Choose Your Avatar</div>
+            <div class="avatar-options" id="avatar-opts">
+              <div class="avatar-opt selected" data-avatar="🐱" onclick="pickAvatar(this)">🐱</div>
+              <div class="avatar-opt" data-avatar="🦊" onclick="pickAvatar(this)">🦊</div>
+              <div class="avatar-opt" data-avatar="🐸" onclick="pickAvatar(this)">🐸</div>
+              <div class="avatar-opt" data-avatar="🦄" onclick="pickAvatar(this)">🦄</div>
+              <div class="avatar-opt" data-avatar="🐼" onclick="pickAvatar(this)">🐼</div>
+              <div class="avatar-opt" data-avatar="🦋" onclick="pickAvatar(this)">🦋</div>
+              <div class="avatar-opt" data-avatar="🐉" onclick="pickAvatar(this)">🐉</div>
+              <div class="avatar-opt" data-avatar="🌟" onclick="pickAvatar(this)">🌟</div>
             </div>
-          );
-        }
+          </div>
+          <button class="btn-primary" onclick="doSignup()">Create Account ✨</button>
+          <div class="btn-ghost">Already have an account? <span onclick="switchAuthTab('login')">Log in</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        ReactDOM.render(<UsernameMatchGame />, document.getElementById('root'));
-    </script>
+  <!-- ══════════════ HOME / FEED SCREEN ══════════════ -->
+  <div class="screen" id="screen-home">
+    <div class="top-bar">
+      <div class="logo-sm">Camereffects</div>
+      <div id="top-avatar-home" class="top-avatar" onclick="navigate('profile')">🐱</div>
+    </div>
+    <div class="feed-tabs">
+      <div class="feed-tab active" onclick="switchFeedTab('forme',this)">✨ For Me</div>
+      <div class="feed-tab" onclick="switchFeedTab('friends',this)">👥 Friends</div>
+      <div class="feed-tab" onclick="switchFeedTab('trending',this)">🔥 Trending</div>
+    </div>
+    <div class="feed-scroll" id="feed-scroll"></div>
+    <div class="nav-bar">
+      <div class="nav-item active" onclick="navigate('home')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="nav-label">Home</span>
+      </div>
+      <div class="nav-item" onclick="navigate('search')">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="nav-label">Search</span>
+      </div>
+      <div class="nav-item create-btn" onclick="navigate('create')">
+        <div class="create-circle">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+      <div class="nav-item" onclick="navigate('notifs')" id="notif-nav-btn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="nav-label">Activity</span>
+      </div>
+      <div class="nav-item" onclick="navigate('profile')">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Profile</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CREATE / CAMERA SCREEN ══════════════ -->
+  <div class="screen" id="screen-create">
+    <!-- Hidden file inputs -->
+    <input type="file" id="gallery-upload" accept="image/*,video/*" style="display:none" onchange="loadGalleryFile(this)"/>
+    <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="loadAvatarFile(this)"/>
+
+    <div class="camera-view" id="camera-view">
+      <video id="video-el" autoplay muted playsinline></video>
+      <!-- Imported photo preview -->
+      <img id="import-photo-el" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover"/>
+      <!-- Imported video preview -->
+      <video id="import-video-el" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover" loop playsinline controls></video>
+      <div class="sticker-layer" id="sticker-layer"></div>
+      <canvas id="snap-canvas" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></canvas>
+
+      <div class="camera-top">
+        <button class="cam-btn" onclick="navigate('home')">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div style="color:#fff;font-family:var(--font-head);font-size:1.1rem" id="rec-timer"></div>
+        <button class="cam-btn" onclick="flipCamera()">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.09"/></svg>
+        </button>
+      </div>
+
+      <!-- Gallery import banner (shown when a file is loaded) -->
+      <div id="import-banner" style="display:none;position:absolute;top:60px;left:0;right:0;z-index:20;padding:0 14px">
+        <div style="background:rgba(0,229,255,.15);border:1px solid var(--cyan);border-radius:12px;padding:9px 14px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(10px)">
+          <span style="font-size:1.1rem" id="import-banner-icon">🖼️</span>
+          <span style="color:#fff;font-size:.85rem;font-weight:700;flex:1" id="import-banner-text">Photo imported — add effects then post!</span>
+          <button onclick="clearImport()" style="color:var(--cyan);font-weight:800;font-size:.85rem">✕ Clear</button>
+        </div>
+      </div>
+
+      <div class="camera-bottom">
+        <div class="capture-row">
+          <!-- Gallery pick button -->
+          <button class="cam-side-btn" onclick="document.getElementById('gallery-upload').click()" title="Upload from gallery">
+            <svg viewBox="0 0 24 24" stroke="#fff" fill="none" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </button>
+          <button class="capture-btn" id="capture-btn" onclick="doCapture()">
+            <div class="capture-inner"></div>
+          </button>
+          <button class="cam-side-btn" onclick="openEffectsTab('text')">
+            <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          </button>
+        </div>
+        <div style="display:flex;justify-content:center;gap:20px;padding:0 20px 6px">
+          <button class="cam-side-btn" onclick="openEffectsTab('emojis')" title="Add Emoji">😄</button>
+          <button class="cam-side-btn" onclick="openEffectsTab('emomes')" title="Add Emome">🎭</button>
+          <button class="cam-side-btn" onclick="openEffectsTab('gifs')" title="Add GIF" style="font-size:.75rem;font-weight:800;color:#fff">GIF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Effects Panel -->
+    <div class="effects-panel">
+      <div class="effects-tabs" id="effects-tabs">
+        <div class="eff-tab active" onclick="setEffTab('emojis',this)">😄 Emojis</div>
+        <div class="eff-tab" onclick="setEffTab('emomes',this)">🎭 Emomes</div>
+        <div class="eff-tab" onclick="setEffTab('gifs',this)">✨ GIFs</div>
+        <div class="eff-tab" onclick="setEffTab('text',this)">💬 Text</div>
+        <div class="eff-tab" onclick="setEffTab('backgrounds',this)">🌄 Backgrounds</div>
+        <div class="eff-tab" onclick="setEffTab('filters',this)">🎨 Filters</div>
+        <div class="eff-tab" onclick="setEffTab('costumes',this)">🎪 Costumes</div>
+      </div>
+      <div class="effects-content" id="effects-content"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PROFILE SCREEN ══════════════ -->
+  <div class="screen" id="screen-profile">
+    <div class="profile-scroll" id="profile-scroll">
+      <div class="profile-header">
+        <button id="profile-back-btn" onclick="goBackFromProfile()" style="display:none;position:absolute;top:16px;left:16px;z-index:10;background:rgba(255,255,255,.12);border:none;border-radius:50%;width:38px;height:38px;display:none;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(10px);transition:.2s" onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="profile-big-avatar" id="profile-big-avatar" style="cursor:pointer;overflow:hidden" onclick="onAvatarClick()">🐱</div>
+        <div class="profile-username" id="profile-username">Username</div>
+        <div class="profile-handle" id="profile-handle">@username</div>
+        <div class="profile-stats">
+          <div class="p-stat" style="cursor:pointer" onclick="jumpToFriendsTab()"><div class="p-stat-num" id="profile-friends">0</div><div class="p-stat-label">Friends</div></div>
+          <div class="p-stat"><div class="p-stat-num" id="profile-creations">0</div><div class="p-stat-label">Creations</div></div>
+          <div class="p-stat"><div class="p-stat-num" id="profile-likes">0</div><div class="p-stat-label">Likes</div></div>
+        </div>
+        <div class="profile-actions" id="profile-actions"></div>
+      </div>
+      <div class="profile-grid-tabs">
+        <div class="grid-tab active" data-tab="posts" onclick="setGridTab('posts',this)">📸 Posts</div>
+        <div class="grid-tab" data-tab="friends" onclick="setGridTab('friends',this)">👥 Friends</div>
+        <div class="grid-tab" data-tab="saved" onclick="setGridTab('saved',this)">🔖 Saved</div>
+        <div class="grid-tab" data-tab="liked" onclick="setGridTab('liked',this)">💚 Liked</div>
+      </div>
+      <div class="creations-grid" id="creations-grid"></div>
+    </div>
+    <div class="nav-bar">
+      <div class="nav-item" onclick="navigate('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Home</span></div>
+      <div class="nav-item" onclick="navigate('search')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nav-label">Search</span></div>
+      <div class="nav-item create-btn" onclick="navigate('create')"><div class="create-circle"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+      <div class="nav-item" onclick="navigate('notifs')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="nav-label">Activity</span></div>
+      <div class="nav-item active" onclick="navigate('profile')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">Profile</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SEARCH SCREEN ══════════════ -->
+  <div class="screen" id="screen-search">
+    <div class="top-bar">
+      <div class="logo-sm">Discover</div>
+      <div id="top-avatar-search" class="top-avatar" onclick="navigate('profile')">🐱</div>
+    </div>
+    <div class="search-bar-wrap">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search users, #tags, creations…" id="search-input" oninput="doSearch(this.value)"/>
+      </div>
+    </div>
+    <div class="search-scroll" id="search-results"></div>
+    <div class="nav-bar">
+      <div class="nav-item" onclick="navigate('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Home</span></div>
+      <div class="nav-item active" onclick="navigate('search')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nav-label">Search</span></div>
+      <div class="nav-item create-btn" onclick="navigate('create')"><div class="create-circle"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+      <div class="nav-item" onclick="navigate('notifs')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="nav-label">Activity</span></div>
+      <div class="nav-item" onclick="navigate('profile')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">Profile</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ NOTIFICATIONS SCREEN ══════════════ -->
+  <div class="screen" id="screen-notifs">
+    <div class="top-bar">
+      <div class="logo-sm">Activity</div>
+      <div id="top-avatar-notifs" class="top-avatar" onclick="navigate('profile')">🐱</div>
+    </div>
+    <div class="notifs-scroll" id="notifs-list"></div>
+    <div class="nav-bar">
+      <div class="nav-item" onclick="navigate('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Home</span></div>
+      <div class="nav-item" onclick="navigate('search')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nav-label">Search</span></div>
+      <div class="nav-item create-btn" onclick="navigate('create')"><div class="create-circle"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+      <div class="nav-item active" onclick="navigate('notifs')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="nav-label">Activity</span></div>
+      <div class="nav-item" onclick="navigate('profile')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">Profile</span></div>
+    </div>
+  </div>
+
+</div><!-- /#app -->
+
+<!-- ══════════════ MODALS ══════════════ -->
+<!-- Comments Modal -->
+<div class="modal-overlay" id="comments-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💬 Comments</div>
+    <div class="comments-list" id="comments-list"></div>
+    <div class="comment-input-row">
+      <textarea class="comment-input" id="comment-input" rows="1" placeholder="Add a comment…"></textarea>
+      <button class="btn-send" onclick="submitComment()">Post</button>
+    </div>
+    <button style="width:100%;margin-top:12px;padding:11px;border-radius:12px;background:var(--glass);color:var(--muted);font-weight:700;border:1px solid var(--border)" onclick="closeModal('comments-modal')">Close</button>
+  </div>
+</div>
+
+<!-- Cyberbully Confirm -->
+<div class="modal-overlay" id="bully-modal" style="align-items:center">
+  <div class="confirm-dialog">
+    <div style="font-size:2.5rem;margin-bottom:10px">⚠️</div>
+    <h3>Hold on!</h3>
+    <p id="bully-msg">Your comment may be hurtful. Are you sure you want to post it? Consider rewording it to be kinder.</p>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="closeModal('bully-modal')">Edit It</button>
+      <button class="confirm-proceed" onclick="confirmComment()">Post Anyway</button>
+    </div>
+  </div>
+</div>
+
+<!-- Text Sticker Add -->
+<div class="modal-overlay" id="text-modal" style="align-items:center">
+  <div class="text-add-modal" style="background:var(--card);border-radius:20px;padding:22px;max-width:360px;width:100%;margin:auto;animation:slideUp .3s ease">
+    <div class="modal-title">✍️ Add Text</div>
+    <input class="field-input" id="text-input-modal" placeholder="Type something fun…" style="margin-bottom:12px"/>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="text-color-picks">
+      <div onclick="pickTextColor('#ffffff',this)" style="width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid var(--border);cursor:pointer"></div>
+      <div onclick="pickTextColor('#ff2d87',this)" style="width:28px;height:28px;border-radius:50%;background:#ff2d87;cursor:pointer"></div>
+      <div onclick="pickTextColor('#00e5ff',this)" style="width:28px;height:28px;border-radius:50%;background:#00e5ff;cursor:pointer"></div>
+      <div onclick="pickTextColor('#ffd600',this)" style="width:28px;height:28px;border-radius:50%;background:#ffd600;cursor:pointer"></div>
+      <div onclick="pickTextColor('#00e676',this)" style="width:28px;height:28px;border-radius:50%;background:#00e676;cursor:pointer"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-primary" style="flex:1" onclick="addTextSticker()">Add ✓</button>
+      <button style="flex:1;padding:11px;border-radius:12px;background:var(--glass);color:var(--muted);font-weight:700;border:1px solid var(--border)" onclick="closeModal('text-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mini Game Modal -->
+<div class="modal-overlay" id="game-modal" style="align-items:center">
+  <div class="game-modal-inner" style="position:relative;width:100%;max-width:380px;margin:auto">
+    <div class="game-ui">
+      <div>
+        <div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase" id="game-stat-label">Score</div>
+        <div class="game-score" id="game-score">0</div>
+      </div>
+      <div style="font-family:var(--font-head);font-size:1.1rem;text-align:center;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="game-title-display">🎮 Emoji Catcher</div>
+      <div>
+        <div style="font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase">Lives</div>
+        <div class="game-lives" id="game-lives">❤️❤️❤️</div>
+      </div>
+    </div>
+    <!-- Canvas-based games (Catcher, Whack-a-Mole, Tap Blast) -->
+    <canvas id="game-canvas" width="380" height="420"></canvas>
+    <!-- Div-based game area (Memory Match) -->
+    <div id="game-div-area" style="display:none;width:100%;min-height:300px;padding:16px;background:linear-gradient(180deg,#0a0a1a,#1a0a2e)"></div>
+    <!-- Timer bar (used by Tap Blast) -->
+    <div id="game-timer-bar-wrap" style="display:none;padding:4px 14px 0">
+      <div style="background:var(--glass);border-radius:4px;height:6px;overflow:hidden">
+        <div id="game-timer-bar" style="height:100%;background:linear-gradient(90deg,var(--pink),var(--cyan));width:100%;transition:width .1s linear;border-radius:4px"></div>
+      </div>
+    </div>
+    <div class="game-over" id="game-over" style="position:absolute;inset:0;border-radius:20px">
+      <div style="font-size:3rem">🎉</div>
+      <div style="font-family:var(--font-head);font-size:2rem" id="game-over-title">Game Over!</div>
+      <div style="color:var(--muted)" id="game-final-score"></div>
+      <button class="btn-primary" style="width:160px;margin-top:10px" onclick="restartGame()">Play Again 🎮</button>
+      <button style="color:var(--muted);font-weight:700;margin-top:4px" onclick="closeModal('game-modal')">Exit</button>
+    </div>
+    <div style="padding:10px 18px 16px;display:flex;justify-content:center">
+      <button style="color:var(--muted);font-weight:700;font-size:.85rem" onclick="closeModal('game-modal')">Close Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- Post Saved / Created feedback -->
+<div class="modal-overlay" id="post-saved-modal" style="align-items:center">
+  <div class="confirm-dialog">
+    <div style="font-size:3rem;margin-bottom:10px" id="post-saved-icon">🎉</div>
+    <h3 id="post-saved-title">Posted!</h3>
+    <p id="post-saved-desc">Your creation has been shared with the world!</p>
+    <div class="confirm-btns" style="margin-top:4px">
+      <button class="confirm-proceed" onclick="closeModal('post-saved-modal');navigate('home')">See Feed 🏠</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════
+//  STATE
+// ═══════════════════════════════
+let currentUser = null;
+let selectedAvatar = '🐱';
+let selectedTextColor = '#ffffff';
+let activeCommentPostId = null;
+let pendingComment = null;
+let cameraStream = null;
+let facingMode = 'user';
+let isRecording = false;
+let recInterval = null;
+let recSeconds = 0;
+let currentEffTab = 'emojis';
+let activeFilter = null;
+let bgStyle = null;
+let viewingUserId = null;
+let currentFeedTab = 'forme';
+let gameRunning = false;
+let gameAnimFrame = null;
+let gameState = {};
+
+// ── Mock Users
+const users = [
+  {id:'u1',name:'Luna Star',username:'lunastar',avatar:'🌟',bio:'Creating magic ✨',friends:[],blocked:[],creations:12,likes:340},
+  {id:'u2',name:'Pixel Fox',username:'pixelfox',avatar:'🦊',bio:'Game dev & vibes 🎮',friends:[],blocked:[],creations:28,likes:892},
+  {id:'u3',name:'Mochi Cat',username:'mochicat',avatar:'🐱',bio:'just here to have fun 🐾',friends:[],blocked:[],creations:7,likes:120},
+  {id:'u4',name:'Neo Storm',username:'neostorm',avatar:'⚡',bio:'Digital artist & coder',friends:[],blocked:[],creations:45,likes:2100},
+  {id:'u5',name:'Bloom Fairy',username:'bloomfairy',avatar:'🌸',bio:'Nature + art lover 🌿',friends:[],blocked:[],creations:19,likes:670},
+];
+
+// ── Mock Posts
+const posts = [
+  {id:'p1',userId:'u1',type:'video',videoUrl:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',emoji:'🌟✨🎭',text:'Magic hour vibes!',caption:'Golden hour filter + stardust emomes 💫',likes:142,dislikes:3,saves:28,comments:[{userId:'u2',text:'This is absolutely stunning! 😍'},{userId:'u3',text:'Love the emome overlay!'}],myTyped:false,liked:false,disliked:false,saved:false,time:'2h ago'},
+  {id:'p2',userId:'u2',type:'game',emoji:'🎮👾🕹️',text:'Emoji Catcher',caption:'My new mini game — can you beat my high score of 420? 🎮',likes:89,dislikes:1,saves:44,comments:[{userId:'u4',text:'Got 380, so close!!'}],myTyped:false,liked:false,disliked:false,saved:false,time:'4h ago'},
+  {id:'p3',userId:'u4',type:'photo',emoji:'⚡🔮💙',text:'Digital Dreams',caption:'3D render + custom emomes ⚡ Background swapped to cyberpunk city',likes:312,dislikes:5,saves:76,comments:[{userId:'u1',text:'The background swap is 🔥'},{userId:'u5',text:'Tutorial please!!'},{userId:'u2',text:'Next level stuff'}],myTyped:false,liked:false,disliked:false,saved:false,time:'6h ago'},
+  {id:'p4',userId:'u5',type:'photo',emoji:'🌸🌿🦋',text:'Spring Vibes',caption:'Nature walk today 🌸 Added butterfly emome and flower GIFs!',likes:203,dislikes:2,saves:51,comments:[{userId:'u3',text:'So peaceful 💚'}],myTyped:false,liked:false,disliked:false,saved:false,time:'1d ago'},
+  {id:'p5',userId:'u3',type:'video',videoUrl:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',emoji:'🐱😂🎉',text:'Cat Costume Filter',caption:'The whiskers costume filter is SENDING me 😂😂😂',likes:567,dislikes:8,saves:123,comments:[{userId:'u1',text:'LMAOO the ears 😂'},{userId:'u2',text:'I cant 💀'}],myTyped:false,liked:false,disliked:false,saved:false,time:'2d ago'},
+];
+
+// Notifications
+const notifications = [
+  {id:'n1',icon:'🔒',type:'privacy_alert',text:'<strong>Privacy Alert:</strong> Someone tried to share your location in a comment. We blocked it automatically. Tap to review.',time:'10 min ago',action:true},
+  {id:'n2',icon:'💚',type:'like',text:'<strong>lunastar</strong> liked your creation "Magic hour vibes!"',time:'1h ago'},
+  {id:'n3',icon:'💬',type:'comment',text:'<strong>pixelfox</strong> commented: "This is 🔥🔥🔥"',time:'2h ago'},
+  {id:'n4',icon:'👥',type:'friend',text:'<strong>bloomfairy</strong> sent you a friend request!',time:'3h ago',action:true},
+  {id:'n5',icon:'⭐',type:'mytype',text:'<strong>neostorm</strong> marked your creation as "My Type"',time:'5h ago'},
+];
+
+// ═══════════════════════════════
+//  STARFIELD
+// ═══════════════════════════════
+(function(){
+  const sf = document.getElementById('starfield');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*100+'%';
+    s.style.setProperty('--d',(2+Math.random()*4)+'s');
+    s.style.setProperty('--delay',(Math.random()*3)+'s');
+    s.style.opacity=Math.random()*.5;
+    sf.appendChild(s);
+  }
+})();
+
+// ═══════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════
+let currentScreen='home';
+let previousScreen='home';
+
+function navigate(screen){
+  previousScreen=currentScreen;
+  currentScreen=screen;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  if(screen==='home') renderFeed();
+  if(screen==='profile') renderProfile(viewingUserId||currentUser?.id);
+  if(screen==='search') renderSearch('');
+  if(screen==='notifs') renderNotifs();
+  if(screen==='create') startCamera();
+  if(screen!=='create') stopCamera();
+  updateAvatars();
+}
+
+function updateAvatars(){
+  if(!currentUser) return;
+  ['home','search','notifs'].forEach(s=>{
+    const el=document.getElementById('top-avatar-'+s);
+    if(el) el.textContent=currentUser.avatar;
+  });
+}
+
+// ═══════════════════════════════
+//  AUTH
+// ═══════════════════════════════
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>{
+    t.classList.toggle('active',(tab==='login'&&i===0)||(tab==='signup'&&i===1));
+  });
+  document.getElementById('login-form').style.display=tab==='login'?'flex':'none';
+  document.getElementById('signup-form').style.display=tab==='signup'?'flex':'none';
+}
+
+function pickAvatar(el){
+  document.querySelectorAll('.avatar-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAvatar=el.dataset.avatar;
+}
+
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  if(!u||!p){showToast('Please fill all fields','error');return;}
+  // Check existing users
+  let found=users.find(x=>x.username===u)||users.find(x=>x.username==='lunastar'); // demo
+  if(u==='demo'||u.length>0){
+    // Create session user
+    currentUser={
+      id:'me',
+      name:u==='demo'?'Demo User':u,
+      username:u,
+      avatar:selectedAvatar||'🌟',
+      bio:'Hello from Camereffects! 👋',
+      friends:[],
+      blocked:[],
+      creations:0,
+      likes:0,
+      myPosts:[],
+      savedPosts:[],
+      likedPosts:[]
+    };
+    users.push(currentUser);
+    navigate('home');
+    showToast('Welcome back! 👋','success');
+  } else {
+    showToast('Invalid credentials','error');
+  }
+}
+
+function doSignup(){
+  const name=document.getElementById('su-name').value.trim();
+  const uname=document.getElementById('su-user').value.trim().replace('@','');
+  const pass=document.getElementById('su-pass').value;
+  if(!name||!uname||!pass){showToast('Please fill all fields','error');return;}
+  if(users.find(u=>u.username===uname)){showToast('Username taken!','error');return;}
+  currentUser={
+    id:'me',
+    name,username:uname,
+    avatar:selectedAvatar,
+    bio:'New to Camereffects 🎉',
+    friends:[],blocked:[],
+    creations:0,likes:0,
+    myPosts:[],savedPosts:[],likedPosts:[]
+  };
+  users.push(currentUser);
+  navigate('home');
+  showToast('Account created! Welcome 🎉','success');
+  setTimeout(()=>showToast('🔒 Privacy tip: Keep your personal info safe!','info'),2500);
+}
+
+// ═══════════════════════════════
+//  FEED
+// ═══════════════════════════════
+function switchFeedTab(tab,el){
+  currentFeedTab=tab;
+  document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderFeed();
+}
+
+function renderFeed(){
+  const cont=document.getElementById('feed-scroll');
+  let filtered=posts;
+  if(currentFeedTab==='friends') filtered=posts.filter(p=>currentUser?.friends?.includes(p.userId)||p.userId==='me');
+  if(currentFeedTab==='trending') filtered=[...posts].sort((a,b)=>b.likes-a.likes);
+  
+  let html='';
+  
+  // Mini game card in feed
+  if(currentFeedTab==='forme'||currentFeedTab==='trending'){
+    html+=`<div class="minigame-card" onclick="openGame()">
+      <div class="minigame-preview">🎮 👾 🕹️</div>
+      <h3>🕹️ Emoji Catcher</h3>
+      <p>Catch the good emojis, dodge the bad ones. Can you beat the high score?</p>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn-tiny pink" style="margin:0" onclick="event.stopPropagation();openGame()">▶ Play</button>
+        <button class="btn-tiny outline" style="margin:0;border-color:var(--purple);color:var(--purple)" onclick="event.stopPropagation();openGameCreator()">🎨 Make Your Own</button>
+      </div>
+    </div>`;
+  }
+
+  filtered.forEach(p=>{
+    const u=users.find(x=>x.id===p.userId)||{name:'Unknown',avatar:'❓',username:'unknown'};
+    const gradient=getPostGradient(p.id);
+    html+=`<div class="post-card" id="post-${p.id}">
+      <div class="post-header">
+        <div class="post-avatar">${u.avatar}</div>
+        <div>
+          <div class="post-user" onclick="viewProfile('${u.id}')">${u.name}</div>
+          <div class="post-time">@${u.username} · ${p.time}</div>
+        </div>
+        <span class="post-badge badge-${p.type}">${p.type==='video'?'📹 Video':p.type==='game'?'🎮 Game':'📸 Photo'}</span>
+      </div>
+      <div class="post-media" style="background:${gradient}" onclick="handleMediaClick(event,'${p.id}','${p.type}')">
+        ${p.photoUrl
+          ? `<img src="${p.photoUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`
+          : p.videoUrl
+            ? `<video src="${p.videoUrl}" id="vid-${p.id}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;pointer-events:none" loop playsinline preload="metadata"></video>`
+            : `<span class="post-media-emoji" style="left:15%;top:15%">${p.emoji[0]||''}</span>
+               <span class="post-media-emoji" style="right:20%;bottom:20%">${p.emoji[2]||''}</span>
+               <span class="emome-overlay" style="right:12%;top:20%">${p.emoji[1]||''}</span>
+               <div class="post-media-text">${p.text}</div>`
+        }
+        ${p.type==='video'?`<div class="play-btn" id="playbtn-${p.id}"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`:''}
+        ${p.type==='game'?`<div style="font-family:var(--font-head);color:#fff;font-size:1.1rem;background:rgba(177,74,237,.7);padding:8px 18px;border-radius:20px;z-index:1">▶ Play Game</div>`:''}
+      </div>
+      <div style="padding:10px 14px 4px;font-size:.88rem;color:var(--muted)">${p.caption}</div>
+      <div class="post-actions">
+        <div id="action-like-${p.id}" class="action-btn like ${p.liked?'active':''}" onclick="reactPost('${p.id}','like')">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>${p.likes}</span>
+        </div>
+        <div id="action-dislike-${p.id}" class="action-btn dislike ${p.disliked?'active':''}" onclick="reactPost('${p.id}','dislike')">
+          <svg viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+          <span>${p.dislikes}</span>
+        </div>
+        <div id="action-save-${p.id}" class="action-btn save ${p.saved?'active':''}" onclick="reactPost('${p.id}','save')">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <span>${p.saves}</span>
+        </div>
+        <div id="action-mytype-${p.id}" class="action-btn mytype ${p.myTyped?'active':''}" onclick="reactPost('${p.id}','mytype')" title="My Type — see more like this">
+          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>My Type</span>
+        </div>
+        <div class="action-btn" onclick="openComments('${p.id}')" style="margin-left:auto">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>${p.comments.length}</span>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  if(filtered.length===0) html=`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><div style="font-size:3rem;margin-bottom:12px">🌙</div><div style="font-family:var(--font-head);font-size:1.2rem">Nothing here yet</div><div style="font-size:.85rem;margin-top:8px">${currentFeedTab==='friends'?'Follow some friends to see their creations!':'Check back later'}</div></div>`;
+  cont.innerHTML=html;
+}
+
+function handleMediaClick(e, postId, type){
+  if(type==='game'){
+    const p=posts.find(x=>x.id===postId);
+    openGame(p?.gameConfig||null);
+    return;
+  }
+  toggleVideo(postId);
+}
+
+function toggleVideo(postId){
+  const vid=document.getElementById('vid-'+postId);
+  const btn=document.getElementById('playbtn-'+postId);
+  if(!vid) return;
+  if(vid.paused){
+    document.querySelectorAll('.post-media video').forEach(v=>{
+      if(v!==vid){
+        v.pause();
+        const b=document.getElementById('playbtn-'+v.id.replace('vid-',''));
+        if(b) b.style.display='';
+      }
+    });
+    vid.play().catch(err=>showToast('Could not play: '+err.message,'error'));
+    if(btn) btn.style.display='none';
+  } else {
+    vid.pause();
+    if(btn) btn.style.display='';
+  }
+}
+
+function getPostGradient(id){
+  const grads={
+    p1:'linear-gradient(135deg,#1a0533,#2d1b69,#4a2080)',
+    p2:'linear-gradient(135deg,#0a1a3e,#1a0a2e,#3a1060)',
+    p3:'linear-gradient(135deg,#001a2e,#0a2a4e,#00142a)',
+    p4:'linear-gradient(135deg,#0a1a0e,#1a2e1a,#2e4a2e)',
+    p5:'linear-gradient(135deg,#1a0a0a,#2e1a0a,#4a2a0a)',
+  };
+  return grads[id]||'linear-gradient(135deg,#1a1a2e,#2e1a2e)';
+}
+
+function reactPost(postId, type){
+  const p=posts.find(x=>x.id===postId);
+  if(!p) return;
+
+  if(type==='like'){
+    p.liked=!p.liked;
+    p.likes+=p.liked?1:-1;
+    if(p.liked&&p.disliked){p.disliked=false;p.dislikes--; updateActionBtn(postId,'dislike',false,p.dislikes);}
+    if(currentUser){
+      currentUser.likedPosts=currentUser.likedPosts||[];
+      if(p.liked) currentUser.likedPosts.push(postId);
+      else currentUser.likedPosts=currentUser.likedPosts.filter(id=>id!==postId);
+    }
+    if(p.liked) showToast('❤️ Liked!','success');
+    updateActionBtn(postId,'like',p.liked,p.likes);
+  } else if(type==='dislike'){
+    p.disliked=!p.disliked;
+    p.dislikes+=p.disliked?1:-1;
+    if(p.disliked&&p.liked){p.liked=false;p.likes--; updateActionBtn(postId,'like',false,p.likes);}
+    updateActionBtn(postId,'dislike',p.disliked,p.dislikes);
+  } else if(type==='save'){
+    p.saved=!p.saved;
+    p.saves+=p.saved?1:-1;
+    if(currentUser){
+      currentUser.savedPosts=currentUser.savedPosts||[];
+      if(p.saved) currentUser.savedPosts.push(postId);
+      else currentUser.savedPosts=currentUser.savedPosts.filter(id=>id!==postId);
+    }
+    if(p.saved) showToast('🔖 Saved!','success');
+    updateActionBtn(postId,'save',p.saved,p.saves);
+  } else if(type==='mytype'){
+    p.myTyped=!p.myTyped;
+    if(p.myTyped) showToast('⭐ Added to "My Type"!','info');
+    updateActionBtn(postId,'mytype',p.myTyped,null);
+  }
+}
+
+// Update a single action button in-place — no full feed re-render
+function updateActionBtn(postId, type, isActive, count){
+  const btn=document.getElementById('action-'+type+'-'+postId);
+  if(!btn) return;
+  btn.classList.toggle('active', isActive);
+  if(count!==null){
+    const span=btn.querySelector('span');
+    if(span) span.textContent=count;
+  }
+}
+
+// ═══════════════════════════════
+//  COMMENTS
+// ═══════════════════════════════
+function openComments(postId){
+  activeCommentPostId=postId;
+  const p=posts.find(x=>x.id===postId);
+  const list=document.getElementById('comments-list');
+  list.innerHTML=p.comments.map(c=>{
+    const u=users.find(x=>x.id===c.userId)||{avatar:'❓',username:'unknown'};
+    return `<div class="comment-item">
+      <div class="comment-avatar">${u.avatar}</div>
+      <div class="comment-body">
+        <div class="comment-author">@${u.username}</div>
+        <div class="comment-text">${c.text}</div>
+      </div>
+    </div>`;
+  }).join('')||'<div style="color:var(--muted);text-align:center;padding:20px">No comments yet. Be the first! 💬</div>';
+  openModal('comments-modal');
+}
+
+const badWords=['hate','stupid','idiot','ugly','loser','dumb','kill','die','shut up','trash','garbage'];
+function submitComment(){
+  const inp=document.getElementById('comment-input');
+  const text=inp.value.trim();
+  if(!text) return;
+  const lower=text.toLowerCase();
+  const flagged=badWords.some(w=>lower.includes(w));
+  if(flagged){
+    pendingComment=text;
+    document.getElementById('bully-msg').textContent=`"${text}" — this comment may come across as hurtful or unkind. Are you sure you want to post it? Consider rewriting it more positively.`;
+    openModal('bully-modal');
+    return;
+  }
+  postComment(text);
+  inp.value='';
+}
+
+function confirmComment(){
+  closeModal('bully-modal');
+  postComment(pendingComment);
+  pendingComment=null;
+  document.getElementById('comment-input').value='';
+}
+
+function postComment(text){
+  const p=posts.find(x=>x.id===activeCommentPostId);
+  if(!p) return;
+  p.comments.push({userId:'me',text});
+  openComments(activeCommentPostId);
+  showToast('Comment posted! 💬','success');
+}
+
+// ═══════════════════════════════
+//  PROFILE
+// ═══════════════════════════════
+function viewProfile(userId){
+  viewingUserId=userId;
+  previousScreen=currentScreen;
+  navigate('profile');
+}
+
+function goBackFromProfile(){
+  viewingUserId=currentUser?.id||null;
+  navigate(previousScreen||'search');
+}
+
+function renderProfile(userId){
+  const u=userId==='me'||userId===currentUser?.id ? currentUser : users.find(x=>x.id===userId)||users[0];
+  if(!u) return;
+  const isMe=(u.id==='me'||u.id===currentUser?.id);
+
+  // Avatar — photo or emoji
+  const avatarEl=document.getElementById('profile-big-avatar');
+  if(u.avatarPhoto){
+    avatarEl.innerHTML=`<img src="${u.avatarPhoto}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:0"/>`;
+    avatarEl.style.fontSize='0';
+    avatarEl.style.position='relative';
+  } else {
+    avatarEl.innerHTML=u.avatar||'🐱';
+    avatarEl.style.fontSize='';
+  }
+  // Show back button only when viewing someone else's profile
+  const backBtn = document.getElementById('profile-back-btn');
+  if(backBtn) backBtn.style.display = isMe ? 'none' : 'flex';
+
+  // Only clickable for own profile
+  avatarEl.style.cursor=isMe?'pointer':'default';
+  avatarEl.onclick=isMe?()=>document.getElementById('avatar-upload').click():null;
+
+  document.getElementById('profile-username').textContent=u.name;
+  document.getElementById('profile-handle').textContent='@'+u.username;
+  document.getElementById('profile-friends').textContent=u.friends?.length||0;
+  document.getElementById('profile-creations').textContent=u.creations||0;
+  document.getElementById('profile-likes').textContent=u.likes||0;
+
+  const actions=document.getElementById('profile-actions');
+  if(isMe){
+    actions.innerHTML=`
+      <button class="btn-outline" onclick="document.getElementById('avatar-upload').click()">🖼️ Change Photo</button>
+      <button class="btn-outline" onclick="showPrivacySettings()">🔒 Privacy</button>`;
+  } else {
+    const blocked=currentUser?.blocked?.includes(u.id);
+    const friended=currentUser?.friends?.includes(u.id);
+    actions.innerHTML=`
+      <button class="btn-sm-pink" onclick="toggleFriend('${u.id}')">${friended?'✓ Friends':'+ Friend'}</button>
+      <button class="btn-danger" onclick="blockUser('${u.id}')">${blocked?'🔓 Unblock':'🚫 Block'}</button>`;
+  }
+
+  // Grid — track active tab
+  const activeGridTab = document.querySelector('.grid-tab.active')?.dataset?.tab || 'posts';
+  renderProfileGrid(u, isMe, activeGridTab);
+}
+
+function renderProfileGrid(u, isMe, tab){
+  const grid=document.getElementById('creations-grid');
+  let gridPosts=[];
+
+  if(tab==='posts'){
+    gridPosts=posts.filter(p=>p.userId===u.id||(isMe&&p.userId==='me'));
+  } else if(tab==='friends'){
+    // Show friends as user cards instead of the post grid
+    const friendIds=isMe?(currentUser?.friends||[]):(u.friends||[]);
+    const friendUsers=users.filter(x=>friendIds.includes(x.id));
+    const emptyMsg='No friends yet — search for people to add! 👥';
+    grid.innerHTML=friendUsers.length
+      ? `<div style="grid-column:1/-1;display:flex;flex-direction:column;gap:8px;padding:12px">`+
+        friendUsers.map(f=>`
+          <div class="user-card" onclick="viewProfile('${f.id}')">
+            <div class="user-card-avatar">${f.avatarPhoto?`<img src="${f.avatarPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`:f.avatar}</div>
+            <div style="flex:1">
+              <div class="user-card-name">${f.name}</div>
+              <div class="user-card-handle">@${f.username} · ${f.creations||0} creations</div>
+            </div>
+            ${isMe?`<button class="btn-tiny red" onclick="event.stopPropagation();toggleFriend('${f.id}');renderProfile(currentUser?.id)">Remove</button>`:''}
+          </div>`).join('')+`</div>`
+      : `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">${emptyMsg}</div>`;
+    return;
+  } else if(tab==='saved'){
+    const savedIds=isMe?(currentUser?.savedPosts||[]):(u.savedPosts||[]);
+    gridPosts=posts.filter(p=>savedIds.includes(p.id));
+  } else if(tab==='liked'){
+    const likedIds=isMe?(currentUser?.likedPosts||[]):(u.likedPosts||[]);
+    gridPosts=posts.filter(p=>likedIds.includes(p.id));
+  }
+
+  const emptyMsg={
+    posts:'No creations yet 📭',
+    saved:'Nothing saved yet — tap 🔖 on posts!',
+    liked:'Nothing liked yet — tap ❤️ on posts!'
+  }[tab]||'Nothing here yet';
+
+  grid.innerHTML=gridPosts.length?gridPosts.map(p=>`
+    <div class="grid-item" onclick="openComments('${p.id}')">
+      ${p.photoUrl
+        ?`<img src="${p.photoUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`
+        :p.videoUrl
+          ?`<video src="${p.videoUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;pointer-events:none" preload="metadata"></video>`
+          :`<div class="grid-thumb" style="background:${getPostGradient(p.id)}">${p.emoji[0]||'📸'}</div>`
+      }
+      <div class="grid-overlay">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        ${p.likes}
+      </div>
+    </div>`).join('')
+    :`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">${emptyMsg}</div>`;
+}
+
+function jumpToFriendsTab(){
+  const friendsTab=document.querySelector('.grid-tab[data-tab="friends"]');
+  if(friendsTab){
+    document.querySelectorAll('.grid-tab').forEach(t=>t.classList.remove('active'));
+    friendsTab.classList.add('active');
+    const u=viewingUserId&&viewingUserId!==currentUser?.id?users.find(x=>x.id===viewingUserId):currentUser;
+    const isMe=!viewingUserId||viewingUserId==='me'||viewingUserId===currentUser?.id;
+    if(u) renderProfileGrid(u,isMe,'friends');
+    // Scroll grid into view
+    document.getElementById('creations-grid')?.scrollIntoView({behavior:'smooth'});
+  }
+}
+
+function setGridTab(tab, el){
+  document.querySelectorAll('.grid-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const u = viewingUserId && viewingUserId!==currentUser?.id
+    ? users.find(x=>x.id===viewingUserId)
+    : currentUser;
+  if(!u) return;
+  const isMe = !viewingUserId || viewingUserId==='me' || viewingUserId===currentUser?.id;
+  renderProfileGrid(u, isMe, tab);
+}
+
+function toggleFriend(userId){
+  if(!currentUser.friends) currentUser.friends=[];
+  const idx=currentUser.friends.indexOf(userId);
+  if(idx>-1){currentUser.friends.splice(idx,1);showToast('Friend removed','info');}
+  else{currentUser.friends.push(userId);showToast('Friend added! 👥','success');}
+  renderProfile(userId);
+}
+
+function blockUser(userId){
+  if(!currentUser.blocked) currentUser.blocked=[];
+  const idx=currentUser.blocked.indexOf(userId);
+  if(idx>-1){currentUser.blocked.splice(idx,1);showToast('User unblocked','info');}
+  else{currentUser.blocked.push(userId);showToast('User blocked 🚫','success');}
+  renderProfile(userId);
+}
+
+function showPrivacySettings(){
+  showToast('🔒 Your privacy settings are protected. All personal info is encrypted.','info');
+}
+
+// ── Avatar: used on profile avatar click
+function onAvatarClick(){
+  // Only for own profile
+  const isMe = !viewingUserId || viewingUserId==='me' || viewingUserId===currentUser?.id;
+  if(isMe) document.getElementById('avatar-upload').click();
+}
+
+// ── Load avatar photo from device
+function loadAvatarFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const url=URL.createObjectURL(file);
+  if(currentUser){
+    currentUser.avatarPhoto=url;
+    // Also update top-bar avatar to show image
+    ['home','search','notifs'].forEach(s=>{
+      const el=document.getElementById('top-avatar-'+s);
+      if(el) el.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+    });
+    renderProfile(currentUser.id);
+    showToast('✅ Profile photo updated!','success');
+  }
+  input.value=''; // reset so same file can be re-picked
+}
+
+// ── Gallery: track imported file state
+let importedFileUrl=null;
+let importedFileType=null; // 'photo' | 'video'
+
+function loadGalleryFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  // Revoke old blob to avoid memory leak
+  if(importedFileUrl) URL.revokeObjectURL(importedFileUrl);
+
+  importedFileUrl=URL.createObjectURL(file);
+  importedFileType=file.type.startsWith('video')?'video':'photo';
+
+  const photoEl=document.getElementById('import-photo-el');
+  const videoEl=document.getElementById('import-video-el');
+  const camVid=document.getElementById('video-el');
+
+  // Stop camera (don't need the live feed while previewing imported media)
+  if(cameraStream){ cameraStream.getTracks().forEach(t=>t.stop()); cameraStream=null; }
+
+  if(importedFileType==='photo'){
+    photoEl.src=importedFileUrl;
+    photoEl.style.display='block';
+    videoEl.style.display='none';
+    camVid.style.display='none';
+  } else {
+    videoEl.src=importedFileUrl;
+    videoEl.style.display='block';
+    videoEl.play().catch(()=>{});
+    photoEl.style.display='none';
+    camVid.style.display='none';
+  }
+
+  // Show banner
+  const banner=document.getElementById('import-banner');
+  document.getElementById('import-banner-icon').textContent=importedFileType==='video'?'🎬':'🖼️';
+  document.getElementById('import-banner-text').textContent=
+    importedFileType==='video'
+      ? 'Video imported — add effects then tap ● to post!'
+      : 'Photo imported — add effects then tap ● to post!';
+  banner.style.display='block';
+
+  showToast(`${importedFileType==='video'?'🎬 Video':'🖼️ Photo'} loaded! Add effects & tap post.`,'success');
+  input.value='';
+}
+
+function clearImport(){
+  if(importedFileUrl){ URL.revokeObjectURL(importedFileUrl); importedFileUrl=null; }
+  importedFileType=null;
+  document.getElementById('import-photo-el').style.display='none';
+  document.getElementById('import-video-el').style.display='none';
+  document.getElementById('import-video-el').src='';
+  document.getElementById('import-banner').style.display='none';
+  // Restart live camera
+  const camVid=document.getElementById('video-el');
+  camVid.style.display='';
+  startCamera();
+}
+
+// Gallery-aware doCapture
+function doCapture(){
+  if(importedFileUrl){
+    const newPost={
+      id:'p'+Date.now(), userId:'me',
+      type: importedFileType==='video'?'video':'photo',
+      ...(importedFileType==='video' ? {videoUrl:importedFileUrl} : {photoUrl:importedFileUrl}),
+      emoji:['📁','✨','🌟'], text:'My Creation!',
+      caption:'Shared from my gallery! 📁',
+      likes:0,dislikes:0,saves:0,comments:[],
+      myTyped:false,liked:false,disliked:false,saved:false,time:'Just now'
+    };
+    // Keep the blob alive (don't revoke — feed needs it)
+    importedFileUrl=null; importedFileType=null;
+    posts.unshift(newPost);
+    if(currentUser) currentUser.creations=(currentUser.creations||0)+1;
+    document.getElementById('import-banner').style.display='none';
+    document.getElementById('import-photo-el').style.display='none';
+    document.getElementById('import-video-el').style.display='none';
+    document.getElementById('video-el').style.display='';
+    document.getElementById('post-saved-icon').textContent='📁';
+    document.getElementById('post-saved-title').textContent='Creation Posted!';
+    document.getElementById('post-saved-desc').textContent='Your upload has been shared to your profile!';
+    openModal('post-saved-modal');
+    startCamera();
+    return;
+  }
+  // Otherwise normal camera capture
+  if(isRecording){
+    isRecording=false;
+    clearInterval(recInterval);
+    document.getElementById('capture-btn').classList.remove('recording');
+    document.getElementById('rec-timer').textContent='';
+    stopVideoRecording();
+    return;
+  }
+  doPhotoCapture();
+}
+
+// ═══════════════════════════════
+//  SEARCH
+// ═══════════════════════════════
+function renderSearch(query){
+  const cont=document.getElementById('search-results');
+  const filtered=query?users.filter(u=>u.username.includes(query.toLowerCase())||u.name.toLowerCase().includes(query.toLowerCase())):users;
+  let html=`<div class="section-title">${query?`Results for "${query}"`:'👥 Suggested Users'}</div>`;
+  html+=filtered.map(u=>{
+    if(u.id==='me') return '';
+    const friended=currentUser?.friends?.includes(u.id);
+    const blocked=currentUser?.blocked?.includes(u.id);
+    return `<div class="user-card">
+      <div class="user-card-avatar">${u.avatar}</div>
+      <div style="flex:1">
+        <div class="user-card-name" onclick="viewProfile('${u.id}')">${u.name}</div>
+        <div class="user-card-handle">@${u.username} · ${u.creations} creations</div>
+      </div>
+      <div class="user-card-actions">
+        <button class="btn-tiny ${friended?'outline':'pink'}" onclick="toggleFriend('${u.id}')">${friended?'Friends':'+ Add'}</button>
+        ${blocked?`<button class="btn-tiny outline" onclick="blockUser('${u.id}')">Unblock</button>`:`<button class="btn-tiny red" onclick="blockUser('${u.id}')">Block</button>`}
+      </div>
+    </div>`;
+  }).join('');
+  cont.innerHTML=html;
+}
+
+function doSearch(q){renderSearch(q);}
+
+// ═══════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════
+function renderNotifs(){
+  const cont=document.getElementById('notifs-list');
+  // Privacy alert banner
+  let html=`<div class="privacy-alert-banner">
+    <h3>🔒 Privacy Shield Active</h3>
+    <p>Camereffects automatically scans all messages and comments for private information (phone numbers, addresses, emails) and blocks them before they're posted.</p>
+    <div class="privacy-actions">
+      <button class="btn-tiny pink" onclick="showToast('Privacy log: 3 items blocked this week 🔒','info')">View Log</button>
+      <button class="btn-tiny outline" onclick="showToast('Change privacy settings coming soon!','info')">Settings</button>
+    </div>
+  </div>`;
+  html+=notifications.map(n=>`
+    <div class="notif-card ${n.type==='privacy_alert'?'alert':'new'}">
+      <div class="notif-icon">${n.icon}</div>
+      <div style="flex:1">
+        <div class="notif-text">${n.text}</div>
+        <div class="notif-time">${n.time}</div>
+        ${n.action&&n.type==='friend'?`<div class="privacy-actions" style="margin-top:8px"><button class="btn-tiny pink" onclick="showToast('Friend request accepted! 👥','success')">Accept</button><button class="btn-tiny outline" onclick="showToast('Request declined','info')">Decline</button></div>`:''}
+        ${n.action&&n.type==='privacy_alert'?`<div class="privacy-actions" style="margin-top:8px"><button class="btn-tiny pink" onclick="showToast('Info changed successfully 🔒','success')">Change Info</button><button class="btn-tiny outline" onclick="blockUser('u3');showToast('Account blocked 🚫','success')">Block Account</button></div>`:''}
+      </div>
+    </div>`).join('');
+  cont.innerHTML=html;
+}
+
+// ═══════════════════════════════
+//  CAMERA
+// ═══════════════════════════════
+
+// Always fetch sticker-layer safely — never returns null
+function getStickerLayer(){
+  let layer=document.getElementById('sticker-layer');
+  if(!layer){
+    // Re-create it inside camera-view if it got wiped
+    const camView=document.getElementById('camera-view');
+    if(camView){
+      layer=document.createElement('div');
+      layer.id='sticker-layer';
+      layer.className='sticker-layer';
+      camView.appendChild(layer);
+    }
+  }
+  return layer;
+}
+
+async function startCamera(){
+  const vid=document.getElementById('video-el');
+  // Remove any previous error overlay
+  const prev=document.getElementById('cam-error-overlay');
+  if(prev) prev.remove();
+  // Show the video element again in case it was hidden
+  vid.style.display='';
+
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode},audio:true});
+    vid.srcObject=cameraStream;
+    // Clear stickers but keep the layer in the DOM
+    const layer=getStickerLayer();
+    if(layer) layer.innerHTML='';
+  }catch(e){
+    // Show error as an overlay div — do NOT replace innerHTML so sticker-layer stays alive
+    const camView=document.getElementById('camera-view');
+    const errDiv=document.createElement('div');
+    errDiv.id='cam-error-overlay';
+    errDiv.className='no-cam-msg';
+    errDiv.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:5;background:rgba(0,0,0,.85)';
+    errDiv.innerHTML='<div style="font-size:3rem">📷</div><div>Camera access denied.<br/>Allow camera permission and tap below.</div><button class="btn-primary" style="width:160px" onclick="startCamera()">Try Again</button>';
+    camView.appendChild(errDiv);
+  }
+  renderEffectsTab(currentEffTab);
+}
+
+function stopCamera(){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
+  if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
+  clearInterval(recInterval);
+  isRecording=false;
+}
+
+function flipCamera(){
+  facingMode=facingMode==='user'?'environment':'user';
+  stopCamera();
+  startCamera();
+}
+
+// ── Real MediaRecorder video recording
+let mediaRecorder=null;
+let recordedChunks=[];
+
+function startVideoRecording(){
+  if(!cameraStream){showToast('Camera not ready','error');return;}
+  recordedChunks=[];
+  const mimeType=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4']
+    .find(t=>MediaRecorder.isTypeSupported(t))||'';
+  try{
+    mediaRecorder=new MediaRecorder(cameraStream,mimeType?{mimeType}:{});
+  }catch(e){
+    mediaRecorder=new MediaRecorder(cameraStream);
+  }
+  mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size>0) recordedChunks.push(e.data);};
+  mediaRecorder.onstop=finalizeVideo;
+  mediaRecorder.start(100); // collect in 100ms chunks
+}
+
+function stopVideoRecording(){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
+}
+
+function finalizeVideo(){
+  const blob=new Blob(recordedChunks,{type:recordedChunks[0]?.type||'video/webm'});
+  const url=URL.createObjectURL(blob);
+  const newPost={
+    id:'p'+Date.now(),userId:'me',type:'video',
+    videoUrl:url,
+    emoji:['🎥','✨','🌟'],text:'My Video!',
+    caption:'Just recorded this on Camereffects! 🎬',
+    likes:0,dislikes:0,saves:0,comments:[],
+    myTyped:false,liked:false,disliked:false,saved:false,time:'Just now'
+  };
+  posts.unshift(newPost);
+  if(currentUser) currentUser.creations=(currentUser.creations||0)+1;
+  document.getElementById('post-saved-icon').textContent='🎬';
+  document.getElementById('post-saved-title').textContent='Video Saved!';
+  document.getElementById('post-saved-desc').textContent='Your video has been posted! Tap "See Feed" to watch it.';
+  openModal('post-saved-modal');
+}
+
+// ── Photo capture using canvas
+function doPhotoCapture(){
+  if(!cameraStream){
+    // Still create a post even without camera (for demo)
+    const newPost={
+      id:'p'+Date.now(),userId:'me',type:'photo',
+      emoji:['📸','✨','🌟'],text:'Snap!',
+      caption:'My latest creation! 📸',
+      likes:0,dislikes:0,saves:0,comments:[],
+      myTyped:false,liked:false,disliked:false,saved:false,time:'Just now'
+    };
+    posts.unshift(newPost);
+    if(currentUser) currentUser.creations=(currentUser.creations||0)+1;
+    openModal('post-saved-modal');
+    return;
+  }
+  const vid=document.getElementById('video-el');
+  const canvas=document.createElement('canvas');
+  canvas.width=vid.videoWidth||640;
+  canvas.height=vid.videoHeight||480;
+  const ctx=canvas.getContext('2d');
+  ctx.save();
+  // Mirror if front cam
+  if(facingMode==='user'){ctx.scale(-1,1);ctx.translate(-canvas.width,0);}
+  ctx.drawImage(vid,0,0,canvas.width,canvas.height);
+  ctx.restore();
+  const photoUrl=canvas.toDataURL('image/jpeg',0.9);
+  const newPost={
+    id:'p'+Date.now(),userId:'me',type:'photo',
+    photoUrl,
+    emoji:['📸','✨','🌟'],text:'My Photo!',
+    caption:'Just snapped this on Camereffects! 📸',
+    likes:0,dislikes:0,saves:0,comments:[],
+    myTyped:false,liked:false,disliked:false,saved:false,time:'Just now'
+  };
+  posts.unshift(newPost);
+  if(currentUser) currentUser.creations=(currentUser.creations||0)+1;
+  document.getElementById('post-saved-icon').textContent='📸';
+  document.getElementById('post-saved-title').textContent='Photo Posted!';
+  document.getElementById('post-saved-desc').textContent='Your photo has been shared to your profile!';
+  openModal('post-saved-modal');
+  showToast('📸 Photo captured!','success');
+}
+
+function _doCaptureCam(){} // retired — logic lives in doCapture()
+
+// Long press = start video recording
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('capture-btn');
+  if(!btn) return;
+  let holdTimer;
+  const startHold=()=>{
+    holdTimer=setTimeout(()=>{
+      if(!cameraStream){showToast('Camera not ready','error');return;}
+      isRecording=true;
+      btn.classList.add('recording');
+      recSeconds=0;
+      startVideoRecording();
+      recInterval=setInterval(()=>{
+        recSeconds++;
+        const m=Math.floor(recSeconds/60).toString().padStart(2,'0');
+        const s=(recSeconds%60).toString().padStart(2,'0');
+        document.getElementById('rec-timer').textContent='🔴 '+m+':'+s;
+      },1000);
+      showToast('🔴 Recording… tap again to stop','info');
+    },450);
+  };
+  const cancelHold=()=>clearTimeout(holdTimer);
+  btn.addEventListener('mousedown',startHold);
+  btn.addEventListener('mouseup',cancelHold);
+  btn.addEventListener('mouseleave',cancelHold);
+  btn.addEventListener('touchstart',startHold,{passive:true});
+  btn.addEventListener('touchend',cancelHold);
+});
+
+// ── Effects Panel
+function openEffectsTab(tab){
+  document.querySelectorAll('.eff-tab').forEach(t=>t.classList.remove('active'));
+  const tabs=document.querySelectorAll('.eff-tab');
+  const map={emojis:0,emomes:1,gifs:2,text:3,backgrounds:4,filters:5,costumes:6};
+  if(tabs[map[tab]]) tabs[map[tab]].classList.add('active');
+  renderEffectsTab(tab);
+}
+
+function setEffTab(tab,el){
+  document.querySelectorAll('.eff-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentEffTab=tab;
+  renderEffectsTab(tab);
+}
+
+const EMOJIS=['😂','😍','🥺','😎','🤩','🥳','😜','🤪','😏','🥰','😤','🤯','🥹','😇','🤗','💀','🫶','👏','✨','🔥','💯','🎉','🌈','💫','⚡'];
+const EMOMES=[
+  {id:'em1',emoji:'😝',cls:'em-tongue',label:'Disgust'},
+  {id:'em2',emoji:'😍',cls:'em-hearts',label:'Love'},
+  {id:'em3',emoji:'😂',cls:'em-laugh',label:'Laughing'},
+  {id:'em4',emoji:'😭',cls:'em-cry',label:'Crying'},
+  {id:'em5',emoji:'😤',cls:'em-angry',label:'Angry'},
+  {id:'em6',emoji:'🤩',cls:'em-spin',label:'Spinning'},
+  {id:'em7',emoji:'🥳',cls:'em-bounce',label:'Bouncing'},
+  {id:'em8',emoji:'💀',cls:'em-laugh',label:'Dead'},
+];
+const GIFS=[
+  {id:'g1',label:'Sparkle ✨',anim:'sparkle-anim',style:'background:radial-gradient(circle,#ffd600,transparent);animation:em-spin 1s linear infinite'},
+  {id:'g2',label:'Confetti 🎉',anim:'confetti',style:'background:linear-gradient(45deg,#ff2d87,#00e5ff,#ffd600);animation:heartbeat .5s infinite alternate'},
+  {id:'g3',label:'Fire 🔥',anim:'fire',style:'background:linear-gradient(to top,#ff2d87,#ffd600);animation:em-boing .4s infinite'},
+  {id:'g4',label:'Stars 🌟',anim:'stars',style:'background:radial-gradient(circle,#fff,#ffd600,transparent);animation:twinkle 1s infinite alternate'},
+  {id:'g5',label:'Rainbow 🌈',anim:'rainbow',style:'background:linear-gradient(135deg,red,orange,yellow,green,blue,purple);animation:em-spin 2s linear infinite'},
+  {id:'g6',label:'Hearts 💕',anim:'hearts',style:'background:radial-gradient(circle,#ff2d87,transparent);animation:heartbeat .6s infinite'},
+];
+const BACKGROUNDS=[
+  {id:'bg1',style:'linear-gradient(135deg,#0d0d0d,#1a1a1a)',label:'Dark'},
+  {id:'bg2',style:'linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb)',label:'Sunset'},
+  {id:'bg3',style:'linear-gradient(135deg,#0a0a2e,#1a0a3e,#2e0a5e)',label:'Space'},
+  {id:'bg4',style:'linear-gradient(135deg,#006d77,#83c5be,#edf6f9)',label:'Ocean'},
+  {id:'bg5',style:'linear-gradient(135deg,#2d6a4f,#52b788,#b7e4c7)',label:'Forest'},
+  {id:'bg6',style:'linear-gradient(135deg,#f72585,#7209b7,#3a0ca3)',label:'Neon'},
+  {id:'bg7',style:'linear-gradient(135deg,#ff9a3c,#ff6b35,#f7c59f)',label:'Cozy'},
+  {id:'bg8',style:'linear-gradient(135deg,#e0e0e0,#f5f5f5,#ffffff)',label:'White'},
+];
+const COSTUMES=[
+  {id:'c1',emoji:'😺',label:'Cat'},
+  {id:'c2',emoji:'🐸',label:'Frog'},
+  {id:'c3',emoji:'🤡',label:'Clown'},
+  {id:'c4',emoji:'👽',label:'Alien'},
+  {id:'c5',emoji:'🦊',label:'Fox'},
+  {id:'c6',emoji:'🤖',label:'Robot'},
+  {id:'c7',emoji:'👻',label:'Ghost'},
+  {id:'c8',emoji:'🧙',label:'Wizard'},
+];
+const FILTERS=['Normal','Vintage','Neon','Greyscale','Warm','Cool','Dreamy','Vivid'];
+
+function renderEffectsTab(tab){
+  const cont=document.getElementById('effects-content');
+  currentEffTab=tab;
+  if(tab==='emojis'){
+    cont.innerHTML=EMOJIS.map(e=>`<div class="eff-item" onclick="addEmojiSticker('${e}')">${e}</div>`).join('');
+  } else if(tab==='emomes'){
+    cont.innerHTML=EMOMES.map(m=>`<div class="eff-item" onclick="addEmomeSticker('${m.id}','${m.emoji}','${m.cls}')" style="position:relative">
+      <span class="${m.cls}">${m.emoji}</span>
+      <span class="eff-label">${m.label}</span>
+    </div>`).join('');
+  } else if(tab==='gifs'){
+    cont.innerHTML=GIFS.map(g=>`<div class="eff-item" onclick="addGifSticker('${g.id}','${g.label}')" title="${g.label}" style="overflow:hidden">
+      <div style="width:32px;height:32px;border-radius:8px;${g.style}"></div>
+      <span class="eff-label">${g.label}</span>
+    </div>`).join('');
+  } else if(tab==='text'){
+    cont.innerHTML=`<div class="eff-item" onclick="openModal('text-modal')" style="width:auto;padding:0 16px;font-size:.9rem;font-weight:700;color:var(--cyan)">＋ Add Text</div>`;
+  } else if(tab==='backgrounds'){
+    cont.innerHTML=BACKGROUNDS.map(b=>`<div class="bg-eff eff-item" onclick="applyBackground('${b.style}')" style="background:${b.style};width:80px;height:50px;border-radius:10px">
+      <span class="eff-label">${b.label}</span>
+    </div>`).join('')+`<div class="bg-eff eff-item" onclick="clearBackground()" style="background:transparent;border:1px dashed var(--muted);width:80px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.7rem;font-weight:700">None</div>`;
+  } else if(tab==='filters'){
+    cont.innerHTML=FILTERS.map(f=>`<div class="eff-item" onclick="applyFilter('${f}')" style="width:auto;padding:0 12px;font-size:.8rem;font-weight:700;color:var(--muted)">${f}</div>`).join('');
+  } else if(tab==='costumes'){
+    cont.innerHTML=COSTUMES.map(c=>`<div class="eff-item" onclick="addEmomeSticker('${c.id}','${c.emoji}','em-bounce')" style="position:relative">
+      <span style="font-size:1.8rem">${c.emoji}</span>
+      <span class="eff-label">${c.label}</span>
+    </div>`).join('');
+  }
+}
+
+let stickerCount=0;
+function addEmojiSticker(emoji){
+  const layer=getStickerLayer();
+  if(!layer){showToast('Start camera first! 📷','error');return;}
+  const el=document.createElement('div');
+  el.className='sticker';
+  el.textContent=emoji;
+  el.style.left=(20+Math.random()*60)+'%';
+  el.style.top=(20+Math.random()*60)+'%';
+  el.id='stk-'+(++stickerCount);
+  makeDraggable(el);
+  el.addEventListener('dblclick',()=>el.remove());
+  layer.appendChild(el);
+  showToast('Drag to move • double-click to remove 👆','info');
+}
+
+function addEmomeSticker(id,emoji,cls){
+  const layer=getStickerLayer();
+  if(!layer){showToast('Start camera first! 📷','error');return;}
+  const el=document.createElement('div');
+  el.className='sticker emome';
+  const inner=document.createElement('span');
+  inner.className=cls;
+  inner.textContent=emoji;
+  inner.style.fontSize='2.5rem';
+  el.appendChild(inner);
+  el.style.left=(20+Math.random()*60)+'%';
+  el.style.top=(10+Math.random()*60)+'%';
+  makeDraggable(el);
+  el.addEventListener('dblclick',()=>el.remove());
+  layer.appendChild(el);
+}
+
+function addGifSticker(id,label){
+  const layer=getStickerLayer();
+  if(!layer){showToast('Start camera first! 📷','error');return;}
+  const el=document.createElement('div');
+  el.className='sticker';
+  const g=GIFS.find(x=>x.id===id);
+  el.innerHTML=`<div style="width:60px;height:60px;border-radius:12px;${g.style};display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;font-weight:700;text-shadow:1px 1px 4px #000">${label.split(' ')[1]||'GIF'}</div>`;
+  el.style.left=(20+Math.random()*60)+'%';
+  el.style.top=(20+Math.random()*60)+'%';
+  makeDraggable(el);
+  el.addEventListener('dblclick',()=>el.remove());
+  layer.appendChild(el);
+}
+
+let textColor='#ffffff';
+function pickTextColor(color,el){
+  textColor=color;
+  document.querySelectorAll('#text-color-picks > div').forEach(d=>d.style.outline='');
+  el.style.outline='2px solid var(--cyan)';
+}
+
+function addTextSticker(){
+  const val=document.getElementById('text-input-modal').value.trim();
+  if(!val) return;
+  const layer=getStickerLayer();
+  if(!layer){showToast('Start camera first! 📷','error');return;}
+  const el=document.createElement('div');
+  el.className='text-sticker';
+  el.textContent=val;
+  el.style.color=textColor;
+  el.style.left='20%';
+  el.style.top='40%';
+  makeDraggable(el);
+  el.addEventListener('dblclick',()=>el.remove());
+  layer.appendChild(el);
+  closeModal('text-modal');
+  document.getElementById('text-input-modal').value='';
+}
+
+function applyBackground(style){
+  const vid=document.getElementById('video-el');
+  const cam=document.getElementById('camera-view');
+  cam.style.background=style;
+  vid.style.opacity='0.6';
+  bgStyle=style;
+  showToast('Background applied! 🌄','success');
+}
+
+function clearBackground(){
+  const vid=document.getElementById('video-el');
+  vid.style.opacity='1';
+  document.getElementById('camera-view').style.background='';
+  bgStyle=null;
+}
+
+function applyFilter(f){
+  const vid=document.getElementById('video-el');
+  const filters={
+    Normal:'none',Vintage:'sepia(0.7) contrast(1.1)',Neon:'saturate(3) hue-rotate(90deg)',
+    Greyscale:'grayscale(1)',Warm:'sepia(0.3) saturate(1.5) hue-rotate(-20deg)',
+    Cool:'saturate(1.3) hue-rotate(30deg)',Dreamy:'blur(1px) brightness(1.2) saturate(1.5)',
+    Vivid:'saturate(2.5) contrast(1.2)'
+  };
+  vid.style.filter=filters[f]||'none';
+  showToast(`Filter: ${f} applied 🎨`,'success');
+}
+
+// ── Draggable stickers
+function makeDraggable(el){
+  let ox,oy,sx,sy,dragging=false;
+  const start=e=>{
+    dragging=true;
+    const touch=e.touches?e.touches[0]:e;
+    ox=el.offsetLeft;oy=el.offsetTop;
+    sx=touch.clientX;sy=touch.clientY;
+    el.style.zIndex=99;
+  };
+  const move=e=>{
+    if(!dragging) return;
+    e.preventDefault();
+    const touch=e.touches?e.touches[0]:e;
+    el.style.left=(ox+(touch.clientX-sx))+'px';
+    el.style.top=(oy+(touch.clientY-sy))+'px';
+  };
+  const end=()=>{dragging=false;el.style.zIndex='';};
+  el.addEventListener('mousedown',start);
+  document.addEventListener('mousemove',move);
+  document.addEventListener('mouseup',end);
+  el.addEventListener('touchstart',start,{passive:true});
+  document.addEventListener('touchmove',move,{passive:false});
+  document.addEventListener('touchend',end);
+}
+
+// ═══════════════════════════════
+//  MODAL HELPERS
+
+// ═══════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});
+});
+
+// ═══════════════════════════════
+//  TOAST
+// ═══════════════════════════════
+let toastTimer;
+function showToast(msg,type='info'){
+  let t=document.querySelector('.toast');
+  if(t) t.remove();
+  clearTimeout(toastTimer);
+  t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  toastTimer=setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3000);
+}
+
+// ═══════════════════════════════
+//  INIT
+// ═══════════════════════════════
+renderEffectsTab('emojis');
+// Quick demo login hint
+setTimeout(()=>{
+  if(!currentUser) showToast('💡 Tip: Use any username + password to log in!','info');
+},1500);
+</script>
+<!-- Game Creator Modal -->
+<div class="modal-overlay" id="game-creator-modal" style="align-items:flex-end">
+  <div class="modal-sheet" style="max-height:95vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎮 Build Your Game</div>
+
+    <!-- Step 1: Game Type -->
+    <div id="gc-step1">
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:14px">What kind of game do you want to make?</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+        <div class="gc-type-card selected" data-type="catcher" onclick="gcPickType('catcher',this)">
+          <div style="font-size:2rem">🧺</div>
+          <div style="font-weight:800;font-size:.9rem">Catcher</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Catch falling emojis, dodge the bad ones</div>
+        </div>
+        <div class="gc-type-card" data-type="whack" onclick="gcPickType('whack',this)">
+          <div style="font-size:2rem">🔨</div>
+          <div style="font-weight:800;font-size:.9rem">Whack-a-Mole</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Tap emojis before they disappear</div>
+        </div>
+        <div class="gc-type-card" data-type="memory" onclick="gcPickType('memory',this)">
+          <div style="font-size:2rem">🃏</div>
+          <div style="font-weight:800;font-size:.9rem">Memory Match</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Flip cards and find matching pairs</div>
+        </div>
+        <div class="gc-type-card" data-type="tapblast" onclick="gcPickType('tapblast',this)">
+          <div style="font-size:2rem">💥</div>
+          <div style="font-weight:800;font-size:.9rem">Tap Blast</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Tap as many emojis as you can before time runs out</div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="gcGoStep2()">Next →</button>
+    </div>
+
+    <!-- Step 2: Settings -->
+    <div id="gc-step2" style="display:none;flex-direction:column;gap:14px">
+      <button onclick="gcGoStep1()" style="align-self:flex-start;color:var(--cyan);font-weight:700;font-size:.85rem;margin-bottom:-4px">← Change Type</button>
+      <div id="gc-type-banner" style="background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+        <span id="gc-type-icon" style="font-size:1.6rem">🧺</span>
+        <div><div style="font-weight:800" id="gc-type-name">Catcher</div><div style="font-size:.75rem;color:var(--muted)" id="gc-type-desc">Catch falling emojis</div></div>
+      </div>
+      <div>
+        <div class="field-label">Game Name</div>
+        <input class="field-input" id="gc-name" placeholder="e.g. Pizza Rush 🍕" maxlength="30"/>
+      </div>
+      <div id="gc-catch-section">
+        <div class="field-label" id="gc-catch-label">😄 Emojis to CATCH (max 8)</div>
+        <div id="gc-catch-picks" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;min-height:34px;background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:6px;align-items:center"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px" id="gc-catch-pool"></div>
+      </div>
+      <div id="gc-bad-section">
+        <div class="field-label">💀 Emojis to AVOID (max 4)</div>
+        <div id="gc-bad-picks" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;min-height:34px;background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:6px;align-items:center"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px" id="gc-bad-pool"></div>
+      </div>
+      <div id="gc-speed-section">
+        <div class="field-label">⚡ Speed: <span id="gc-speed-val">Normal</span></div>
+        <input type="range" id="gc-speed" min="1" max="5" value="3" style="width:100%;accent-color:var(--pink)" oninput="updateSpeedLabel(this.value)"/>
+      </div>
+      <div id="gc-time-section" style="display:none">
+        <div class="field-label">⏱️ Time Limit: <span id="gc-time-val">30s</span></div>
+        <input type="range" id="gc-time" min="15" max="60" step="5" value="30" style="width:100%;accent-color:var(--cyan)" oninput="document.getElementById('gc-time-val').textContent=this.value+'s'"/>
+      </div>
+      <div id="gc-lives-section">
+        <div class="field-label">❤️ Lives</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-tiny outline" style="font-size:1.1rem;padding:6px 14px" onclick="adjustLives(-1)">−</button>
+          <span id="gc-lives-display" style="flex:1;text-align:center;font-size:1.1rem;padding:8px;background:var(--glass);border-radius:10px;font-weight:700">❤️❤️❤️</span>
+          <button class="btn-tiny outline" style="font-size:1.1rem;padding:6px 14px" onclick="adjustLives(1)">+</button>
+        </div>
+      </div>
+      <div style="background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">Preview</div>
+        <div id="gc-preview" style="font-size:1.4rem">Pick emojis above!</div>
+      </div>
+      <div style="display:flex;gap:8px;padding-bottom:6px">
+        <button class="btn-primary" onclick="publishCustomGame()" style="flex:1">🚀 Publish Game</button>
+        <button style="padding:11px 16px;border-radius:12px;background:var(--glass);color:var(--muted);font-weight:700;border:1px solid var(--border)" onclick="closeModal('game-creator-modal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.gc-type-card{background:var(--glass);border:2px solid var(--border);border-radius:16px;padding:14px;text-align:center;cursor:pointer;transition:.2s}
+.gc-type-card:hover{border-color:var(--cyan)}
+.gc-type-card.selected{border-color:var(--cyan);background:rgba(0,229,255,.1)}
+</style>
+
+<script>
+// ═══════════════════════════════
+//  GAME CREATOR
+// ═══════════════════════════════
+const GC_CATCH_POOL=['🍕','🍔','⭐','💎','🎁','🌈','🍩','🎈','🦄','🌟','🍦','🎀','🏆','💰','🍎','🎮','🐱','🌸','🍓','🦋','💙','🎵','🍉','🌙','⚡'];
+const GC_BAD_POOL=['💀','👿','💩','🔥','☠️','🕷️','👾','🦠','💣','🌧️'];
+let gcCatchPicked=[], gcBadPicked=[], gcLives=3, gcType='catcher';
+
+const GC_TYPE_META={
+  catcher:{icon:'🧺',name:'Catcher',desc:'Catch falling emojis, dodge the bad ones',hasBad:true,hasSpeed:true,hasTime:false,hasLives:true,catchLabel:'😄 Emojis to CATCH (max 8)',catchMax:8,badMax:4},
+  whack:{icon:'🔨',name:'Whack-a-Mole',desc:'Tap emojis before they disappear',hasBad:true,hasSpeed:true,hasTime:false,hasLives:true,catchLabel:'😄 Emojis to WHACK (max 6)',catchMax:6,badMax:3},
+  memory:{icon:'🃏',name:'Memory Match',desc:'Flip cards to find matching pairs',hasBad:false,hasSpeed:false,hasTime:false,hasLives:true,catchLabel:'🃏 Pick emojis for cards — min 4, max 8 (pairs auto-made)',catchMax:8,badMax:0},
+  tapblast:{icon:'💥',name:'Tap Blast',desc:'Tap emojis fast before time runs out',hasBad:false,hasSpeed:true,hasTime:true,hasLives:false,catchLabel:'💥 Emojis to TAP (max 8)',catchMax:8,badMax:0}
+};
+
+function openGameCreator(){
+  gcCatchPicked=[]; gcBadPicked=[]; gcLives=3; gcType='catcher';
+  document.getElementById('gc-step1').style.display='block';
+  document.getElementById('gc-step2').style.display='none';
+  document.querySelectorAll('.gc-type-card').forEach(c=>c.classList.toggle('selected',c.dataset.type==='catcher'));
+  openModal('game-creator-modal');
+}
+function gcPickType(type,el){
+  gcType=type;
+  document.querySelectorAll('.gc-type-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function gcGoStep2(){
+  document.getElementById('gc-step1').style.display='none';
+  const s2=document.getElementById('gc-step2');
+  s2.style.display='flex';
+  const m=GC_TYPE_META[gcType];
+  document.getElementById('gc-type-icon').textContent=m.icon;
+  document.getElementById('gc-type-name').textContent=m.name;
+  document.getElementById('gc-type-desc').textContent=m.desc;
+  document.getElementById('gc-catch-label').textContent=m.catchLabel;
+  document.getElementById('gc-bad-section').style.display=m.hasBad?'block':'none';
+  document.getElementById('gc-speed-section').style.display=m.hasSpeed?'block':'none';
+  document.getElementById('gc-time-section').style.display=m.hasTime?'block':'none';
+  document.getElementById('gc-lives-section').style.display=m.hasLives?'block':'none';
+  document.getElementById('gc-name').value='';
+  document.getElementById('gc-speed').value=3; updateSpeedLabel(3);
+  document.getElementById('gc-time').value=30; document.getElementById('gc-time-val').textContent='30s';
+  gcCatchPicked=[]; gcBadPicked=[];
+  renderGcPools();
+}
+function gcGoStep1(){
+  document.getElementById('gc-step1').style.display='block';
+  document.getElementById('gc-step2').style.display='none';
+}
+function renderGcPools(){
+  const m=GC_TYPE_META[gcType];
+  document.getElementById('gc-catch-pool').innerHTML=GC_CATCH_POOL.map(e=>`<span onclick="gcToggleCatch('${e}')" style="font-size:1.5rem;cursor:pointer;padding:3px 5px;border-radius:8px;border:2px solid ${gcCatchPicked.includes(e)?'var(--cyan)':'transparent'};background:${gcCatchPicked.includes(e)?'rgba(0,229,255,.12)':'transparent'};transition:.15s">${e}</span>`).join('');
+  document.getElementById('gc-catch-picks').innerHTML=gcCatchPicked.length?gcCatchPicked.map(e=>`<span style="font-size:1.3rem">${e}</span>`).join(''):'<span style="color:var(--muted);font-size:.8rem">None yet</span>';
+  if(m.hasBad){
+    document.getElementById('gc-bad-pool').innerHTML=GC_BAD_POOL.map(e=>`<span onclick="gcToggleBad('${e}')" style="font-size:1.5rem;cursor:pointer;padding:3px 5px;border-radius:8px;border:2px solid ${gcBadPicked.includes(e)?'var(--pink)':'transparent'};background:${gcBadPicked.includes(e)?'rgba(255,45,135,.12)':'transparent'};transition:.15s">${e}</span>`).join('');
+    document.getElementById('gc-bad-picks').innerHTML=gcBadPicked.length?gcBadPicked.map(e=>`<span style="font-size:1.3rem">${e}</span>`).join(''):'<span style="color:var(--muted);font-size:.8rem">None yet</span>';
+  }
+  document.getElementById('gc-lives-display').textContent='❤️'.repeat(gcLives);
+  document.getElementById('gc-preview').textContent=[...gcCatchPicked,...gcBadPicked].slice(0,10).join(' ')||'Pick emojis above!';
+}
+function gcToggleCatch(e){
+  const max=GC_TYPE_META[gcType].catchMax;
+  if(gcCatchPicked.includes(e)) gcCatchPicked=gcCatchPicked.filter(x=>x!==e);
+  else if(gcCatchPicked.length<max) gcCatchPicked.push(e);
+  else{showToast('Max '+max+' emojis for this type!','error');return;}
+  renderGcPools();
+}
+function gcToggleBad(e){
+  const max=GC_TYPE_META[gcType].badMax;
+  if(gcBadPicked.includes(e)) gcBadPicked=gcBadPicked.filter(x=>x!==e);
+  else if(gcBadPicked.length<max) gcBadPicked.push(e);
+  else{showToast('Max '+max+' bad emojis!','error');return;}
+  renderGcPools();
+}
+function adjustLives(delta){gcLives=Math.max(1,Math.min(5,gcLives+delta));document.getElementById('gc-lives-display').textContent='❤️'.repeat(gcLives);}
+function updateSpeedLabel(v){document.getElementById('gc-speed-val').textContent={1:'Very Slow 🐢',2:'Slow 🚶',3:'Normal',4:'Fast 🏃',5:'Extreme ⚡'}[v]||'Normal';}
+function publishCustomGame(){
+  const m=GC_TYPE_META[gcType];
+  const name=document.getElementById('gc-name').value.trim()||'My '+m.name+' Game';
+  const minCatch=gcType==='memory'?4:1;
+  if(gcCatchPicked.length<minCatch){showToast(gcType==='memory'?'Pick at least 4 emojis for pairs!':'Pick at least 1 emoji!','error');return;}
+  if(m.hasBad&&!gcBadPicked.length){showToast('Pick at least 1 emoji to avoid!','error');return;}
+  const speed=parseFloat(document.getElementById('gc-speed').value)*0.8;
+  const timeLimit=parseInt(document.getElementById('gc-time').value)||30;
+  const config={gameType:gcType,catchEmojis:[...gcCatchPicked],badEmojis:[...gcBadPicked],speed,lives:gcLives,timeLimit,text:name};
+  const newPost={id:'p'+Date.now(),userId:'me',type:'game',gameConfig:config,emoji:[gcCatchPicked[0]||'🎮',m.icon,gcCatchPicked[1]||'⭐'],text:name,caption:'Play my '+m.name+' game: '+name+'! 🎮',likes:0,dislikes:0,saves:0,comments:[],myTyped:false,liked:false,disliked:false,saved:false,time:'Just now'};
+  posts.unshift(newPost);
+  if(currentUser){currentUser.creations=(currentUser.creations||0)+1;(currentUser.myPosts=currentUser.myPosts||[]).push(newPost.id);}
+  closeModal('game-creator-modal');
+  document.getElementById('post-saved-icon').textContent='🎮';
+  document.getElementById('post-saved-title').textContent='Game Published!';
+  document.getElementById('post-saved-desc').textContent='"'+name+'" is live! Tap "See Feed" to play it.';
+  openModal('post-saved-modal');
+}
+
+// ═══════════════════════════════
+//  GAME ENGINE — MULTI TYPE
+// ═══════════════════════════════
+let activeGameConfig=null;
+function openGame(config){
+  activeGameConfig=config||null;
+  openModal('game-modal');
+  const type=config?.gameType||'catcher';
+  const titles={catcher:'🧺 Catcher',whack:'🔨 Whack-a-Mole',memory:'🃏 Memory Match',tapblast:'💥 Tap Blast'};
+  document.getElementById('game-title-display').textContent=config?.text||(titles[type]||'🎮 Emoji Catcher');
+  setTimeout(startGame,120);
+}
+function startGame(){
+  if(gameState?.animFrame) cancelAnimationFrame(gameState.animFrame);
+  clearInterval(gameState?.timerInterval);
+  const config=activeGameConfig||{};
+  const type=config.gameType||'catcher';
+  document.getElementById('game-over').classList.remove('show');
+  document.getElementById('game-over-title').textContent='Game Over!';
+  document.getElementById('game-timer-bar-wrap').style.display='none';
+  document.getElementById('game-stat-label').textContent='Score';
+  const canvas=document.getElementById('game-canvas');
+  const divArea=document.getElementById('game-div-area');
+  if(type==='memory'){
+    canvas.style.display='none'; divArea.style.display='block';
+    startMemoryGame(config);
+  } else {
+    canvas.style.display='block'; divArea.style.display='none';
+    if(type==='whack') startWhackGame(config,canvas);
+    else if(type==='tapblast') startTapBlastGame(config,canvas);
+    else startCatcherGame(config,canvas);
+  }
+}
+function restartGame(){startGame();}
+function updateGameUI(){
+  document.getElementById('game-score').textContent=gameState.score||0;
+  const lives=Math.max(0,gameState.lives??0);
+  document.getElementById('game-lives').textContent=gameState.hideLives?'⏱️':('❤️'.repeat(lives)||'💔');
+}
+function showGameOver(finalMsg){
+  gameState.over=true;
+  if(gameState.animFrame) cancelAnimationFrame(gameState.animFrame);
+  clearInterval(gameState.timerInterval);
+  document.getElementById('game-final-score').textContent=finalMsg||'Score: '+gameState.score;
+  document.getElementById('game-over').classList.add('show');
+}
+
+// ── 1. CATCHER
+function startCatcherGame(config,canvas){
+  const ce=config.catchEmojis?.length?config.catchEmojis:['😂','🥺','🤩','🎉','✨','💯','🔥','🌈','💫','🎮'];
+  const be=config.badEmojis?.length?config.badEmojis:['💩','👿','💀'];
+  gameState={score:0,lives:config.lives||3,level:1,basket:{x:canvas.width/2-35,w:70,y:380},items:[],spawnTimer:0,spawnRate:80,speed:config.speed||2.5,catchEmojis:ce,badEmojis:be,over:false,animFrame:null};
+  updateGameUI();
+  canvas.onmousemove=e=>{const r=canvas.getBoundingClientRect();gameState.basket.x=Math.max(0,Math.min(canvas.width-gameState.basket.w,(e.clientX-r.left)-gameState.basket.w/2));};
+  canvas.ontouchmove=e=>{e.preventDefault();const r=canvas.getBoundingClientRect();gameState.basket.x=Math.max(0,Math.min(canvas.width-gameState.basket.w,(e.touches[0].clientX-r.left)-gameState.basket.w/2));};
+  catcherLoop(canvas.getContext('2d'),canvas);
+}
+function catcherLoop(ctx,canvas){
+  if(gameState.over)return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const g=ctx.createLinearGradient(0,0,0,canvas.height);g.addColorStop(0,'#0a0a1a');g.addColorStop(1,'#1a0a2e');ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='rgba(255,255,255,0.2)';for(let i=0;i<15;i++){ctx.beginPath();ctx.arc((i*37+gameState.score)%canvas.width,(i*23+gameState.score*.3)%canvas.height,1,0,Math.PI*2);ctx.fill();}
+  gameState.spawnTimer++;
+  if(gameState.spawnTimer>=gameState.spawnRate){gameState.spawnTimer=0;const bad=gameState.badEmojis.length>0&&Math.random()<0.25;const pool=bad?gameState.badEmojis:gameState.catchEmojis;gameState.items.push({x:Math.random()*(canvas.width-40)+20,y:-20,emoji:pool[Math.floor(Math.random()*pool.length)],bad,speed:gameState.speed+Math.random()*.8});}
+  ctx.font='28px serif';ctx.textAlign='center';
+  gameState.items=gameState.items.filter(item=>{item.y+=item.speed;ctx.fillText(item.emoji,item.x,item.y);const b=gameState.basket;if(item.y>b.y&&item.y<b.y+30&&item.x>b.x&&item.x<b.x+b.w){if(item.bad){gameState.lives--;updateGameUI();if(gameState.lives<=0){showGameOver('Final Score: '+gameState.score+' · Level '+gameState.level);return false;}}else{gameState.score+=10*gameState.level;updateGameUI();if(gameState.score%100===0){gameState.level++;gameState.speed+=.3;gameState.spawnRate=Math.max(30,gameState.spawnRate-5);}}return false;}if(item.y>canvas.height+10){if(!item.bad){gameState.lives--;updateGameUI();if(gameState.lives<=0){showGameOver('Final Score: '+gameState.score);return false;}}return false;}return true;});
+  const b=gameState.basket;ctx.fillStyle='rgba(255,45,135,.2)';ctx.strokeStyle='#ff2d87';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,24,8);ctx.fill();ctx.stroke();ctx.font='18px serif';ctx.fillText('🧺',b.x+b.w/2,b.y+18);
+  gameState.animFrame=requestAnimationFrame(()=>catcherLoop(ctx,canvas));
+}
+
+// ── 2. WHACK-A-MOLE
+function startWhackGame(config,canvas){
+  const ce=config.catchEmojis?.length?config.catchEmojis:['🐱','🐸','🦊','⭐','🎁','💎'];
+  const be=config.badEmojis?.length?config.badEmojis:['💀','👿','💩'];
+  const COLS=3,ROWS=3,hw=80,hh=50;
+  const padX=(canvas.width-COLS*hw)/(COLS+1),padY=(canvas.height-ROWS*hh)/(ROWS+1);
+  const holes=Array.from({length:COLS*ROWS},(_,i)=>({x:padX+(i%COLS)*(hw+padX)+hw/2,y:padY+Math.floor(i/COLS)*(hh+padY)+hh/2,emoji:null,bad:false,visible:0,hit:false}));
+  const sp=config.speed||2.5;
+  gameState={score:0,lives:config.lives||3,catchEmojis:ce,badEmojis:be,holes,spawnTimer:0,spawnRate:Math.round(60/sp*2),showDur:Math.round(70/sp*2),over:false,animFrame:null};
+  updateGameUI();
+  const handleTap=e=>{const r=canvas.getBoundingClientRect();const mx=(e.touches?e.touches[0].clientX:e.clientX)-r.left,my=(e.touches?e.touches[0].clientY:e.clientY)-r.top;gameState.holes.forEach(h=>{if(!h.emoji||h.hit)return;if(Math.sqrt((mx-h.x)**2+(my-h.y)**2)<40){if(h.bad){gameState.lives--;updateGameUI();if(gameState.lives<=0)showGameOver('Final Score: '+gameState.score);}else{gameState.score+=10;updateGameUI();}h.hit=true;h.emoji=null;h.visible=0;}});};
+  canvas.onclick=handleTap;canvas.ontouchstart=e=>{e.preventDefault();handleTap(e);};
+  whackLoop(canvas.getContext('2d'),canvas);
+}
+function whackLoop(ctx,canvas){
+  if(gameState.over)return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const g=ctx.createLinearGradient(0,0,0,canvas.height);g.addColorStop(0,'#0a1a0a');g.addColorStop(1,'#1a2a0a');ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+  gameState.spawnTimer++;
+  if(gameState.spawnTimer>=gameState.spawnRate){gameState.spawnTimer=0;const empty=gameState.holes.filter(h=>!h.emoji);if(empty.length){const h=empty[Math.floor(Math.random()*empty.length)];const bad=gameState.badEmojis.length>0&&Math.random()<0.25;const pool=bad?gameState.badEmojis:gameState.catchEmojis;h.emoji=pool[Math.floor(Math.random()*pool.length)];h.bad=bad;h.visible=0;h.hit=false;}}
+  let gameOverNow=false;
+  gameState.holes.forEach(h=>{ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();ctx.ellipse(h.x,h.y,38,18,0,0,Math.PI*2);ctx.fill();if(h.emoji){h.visible++;const rise=Math.min(1,h.visible/12);ctx.font='32px serif';ctx.textAlign='center';ctx.fillText(h.emoji,h.x,h.y-rise*28);if(h.visible>gameState.showDur){h.emoji=null;if(!h.bad){gameState.lives--;updateGameUI();if(gameState.lives<=0)gameOverNow=true;}}}});
+  if(gameOverNow){showGameOver('Final Score: '+gameState.score);return;}
+  ctx.font='13px sans-serif';ctx.fillStyle='rgba(255,255,255,.35)';ctx.textAlign='center';ctx.fillText('Tap the emojis!',canvas.width/2,canvas.height-12);
+  gameState.animFrame=requestAnimationFrame(()=>whackLoop(ctx,canvas));
+}
+
+// ── 3. MEMORY MATCH
+function startMemoryGame(config){
+  let emojis=config.catchEmojis?.length>=4?config.catchEmojis.slice(0,8):['🍕','🦊','⭐','🎁','🌈','🍩','🦄','💎'];
+  if(emojis.length%2!==0) emojis=emojis.slice(0,-1);
+  const pairs=[...emojis,...emojis].sort(()=>Math.random()-.5);
+  gameState={score:0,lives:config.lives||3,pairs,flipped:[],matched:[],locked:false,over:false,hideLives:false,animFrame:null,timerInterval:null};
+  document.getElementById('game-stat-label').textContent='Matches';
+  updateGameUI();
+  renderMemoryBoard();
+}
+function renderMemoryBoard(){
+  const divArea=document.getElementById('game-div-area');
+  const cols=Math.ceil(Math.sqrt(gameState.pairs.length));
+  divArea.innerHTML='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:8px;padding:8px">'+
+    gameState.pairs.map((emoji,i)=>{const f=gameState.flipped.includes(i)||gameState.matched.includes(i);return '<div onclick="memoryFlip('+i+')" style="aspect-ratio:1;background:'+(f?'rgba(0,229,255,.15)':'rgba(255,255,255,.08)')+'";border:2px solid '+(gameState.matched.includes(i)?'var(--green)':f?'var(--cyan)':'var(--border)')+';border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;transition:.2s;user-select:none">'+(f?emoji:'❓')+'</div>';}).join('')+'</div>';
+}
+function memoryFlip(i){
+  if(gameState.locked||gameState.flipped.includes(i)||gameState.matched.includes(i)||gameState.over)return;
+  gameState.flipped.push(i);renderMemoryBoard();
+  if(gameState.flipped.length===2){
+    gameState.locked=true;const [a,b]=gameState.flipped;
+    if(gameState.pairs[a]===gameState.pairs[b]){
+      gameState.matched.push(a,b);gameState.score++;updateGameUI();gameState.flipped=[];gameState.locked=false;renderMemoryBoard();
+      if(gameState.matched.length===gameState.pairs.length){document.getElementById('game-over-title').textContent='You Won! 🎉';showGameOver('You matched all '+gameState.score+' pairs!');}
+    } else {
+      gameState.lives--;updateGameUI();
+      setTimeout(()=>{gameState.flipped=[];gameState.locked=false;renderMemoryBoard();if(gameState.lives<=0)showGameOver('Matched '+gameState.score+' pairs');},900);
+    }
+  }
+}
+
+// ── 4. TAP BLAST
+function startTapBlastGame(config,canvas){
+  const ce=config.catchEmojis?.length?config.catchEmojis:['🍕','⭐','💎','🎁','🌈','🍩','🦄','🌟'];
+  const totalFrames=(config.timeLimit||30)*60;
+  gameState={score:0,lives:0,hideLives:true,catchEmojis:ce,items:[],spawnTimer:0,spawnRate:25,speed:config.speed||2,timeLeft:totalFrames,totalTime:totalFrames,over:false,animFrame:null,timerInterval:null};
+  document.getElementById('game-timer-bar-wrap').style.display='block';
+  document.getElementById('game-lives').textContent='⏱️';
+  updateGameUI();
+  const handleTap=e=>{if(gameState.over)return;const r=canvas.getBoundingClientRect();const mx=(e.touches?e.touches[0].clientX:e.clientX)-r.left,my=(e.touches?e.touches[0].clientY:e.clientY)-r.top;gameState.items=gameState.items.filter(item=>{if(Math.sqrt((mx-item.x)**2+(my-item.y)**2)<26){gameState.score+=10;updateGameUI();return false;}return true;});};
+  canvas.onclick=handleTap;canvas.ontouchstart=e=>{e.preventDefault();handleTap(e);};
+  tapBlastLoop(canvas.getContext('2d'),canvas);
+}
+function tapBlastLoop(ctx,canvas){
+  if(gameState.over)return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const g=ctx.createLinearGradient(0,0,0,canvas.height);g.addColorStop(0,'#1a0a0a');g.addColorStop(1,'#2e0a1a');ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+  gameState.timeLeft--;
+  const pct=gameState.timeLeft/gameState.totalTime;
+  const bar=document.getElementById('game-timer-bar');
+  if(bar){bar.style.width=(pct*100)+'%';bar.style.background=pct>.4?'linear-gradient(90deg,var(--pink),var(--cyan))':'linear-gradient(90deg,#ff2200,var(--pink))';}
+  if(gameState.timeLeft<=0){showGameOver("Time's up! Final Score: "+gameState.score);return;}
+  gameState.spawnTimer++;
+  if(gameState.spawnTimer>=gameState.spawnRate){gameState.spawnTimer=0;gameState.items.push({x:30+Math.random()*(canvas.width-60),y:30+Math.random()*(canvas.height-80),emoji:gameState.catchEmojis[Math.floor(Math.random()*gameState.catchEmojis.length)],life:110,maxLife:110});}
+  ctx.font='36px serif';ctx.textAlign='center';
+  gameState.items=gameState.items.filter(item=>{item.life--;ctx.globalAlpha=item.life/item.maxLife;ctx.fillText(item.emoji,item.x,item.y+12);ctx.globalAlpha=1;return item.life>0;});
+  ctx.font='13px sans-serif';ctx.fillStyle='rgba(255,255,255,.35)';ctx.textAlign='center';ctx.fillText('Tap fast!',canvas.width/2,canvas.height-12);
+  gameState.animFrame=requestAnimationFrame(()=>tapBlastLoop(ctx,canvas));
+}
+</script>
 </body>
 </html>
